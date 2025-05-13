@@ -1,0 +1,27 @@
+[package]
+name = "bunker"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "bunker"
+path = "src/app.rs"
+
+[dependencies]
+rooky-core.workspace = true
+chessboard-js = { version = "0.1.0", path = "../chessboard-js" }
+chrono.workspace = true
+external.workspace = true
+shady-minions.workspace = true
+gloo = "0.11.0"
+lucide-yew = "1.1.0"
+pgn-reader.workspace = true
+shakmaty.workspace = true
+wasm-bindgen-test.workspace = true
+web-sys = { workspace = true, features = ["HtmlFormElement", "HtmlSelectElement", "RadioNodeList"] }
+yew = { version = "0.21.0", features = ["csr"] }
+nostr-minions=  { workspace = true, features = ["ag-grid"] }
+futures-util.workspace = true
+yew-router = "0.18.0"
+serde = { version = "1.0.219", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"

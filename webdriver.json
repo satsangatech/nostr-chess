@@ -1,0 +1,9 @@
+{
+  "capabilities": {
+    "alwaysMatch": {
+      "goog:chromeOptions": {
+        "args": ["--headless", "--disable-gpu"]
+      }
+    }
+  }
+}

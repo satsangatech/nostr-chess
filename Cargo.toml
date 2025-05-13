@@ -1,0 +1,25 @@
+[workspace]
+resolver="2"
+members = [ "annotator","bunker", "rooky-core", "chessboard-js", "external"]
+
+[workspace.dependencies]
+pgn-reader = "0.26.0"
+shakmaty = { version = "0.27.2", features = ["variant"] }
+
+external = { path = "external" }
+rooky-core = { path = "rooky-core" }
+
+shady-minions = { path = "../shady-minions" }
+
+
+chrono = { version = "0.4.40", features = ["serde"] }
+futures-util = "0.3.31"
+wasm-bindgen-test = "0.3.50"
+wasm-streams = "0.4.2"
+web-sys = { version = "0.3.77", features = ["Window", "Response"] }
+wasm-bindgen-futures = "0.4.50"
+
+
+# nostr-minions = { path = "../../illuminodes/minions" }
+nostr-minions = "0.1.16"
+

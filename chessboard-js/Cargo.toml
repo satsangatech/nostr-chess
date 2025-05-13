@@ -1,0 +1,11 @@
+[package]
+name = "chessboard-js"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+shakmaty.workspace = true
+wasm-bindgen = "0.2.100"
+wasm-bindgen-test.workspace = true
+web-sys.workspace = true
+yew = "0.21.0"

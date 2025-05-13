@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@source "../src/**";
+@source "../../shady-minions/src/**";
+
+:root {
+  --background: hsl(40, 30%, 95%);            /* warm ivory */
+  --foreground: hsl(30, 20%, 10%);            /* deep brown, classic */
+  --primary: hsl(0, 0%, 15%);                 /* rich black - chess piece color */
+  --primary-foreground: hsl(0, 0%, 100%);     /* white */
+  --secondary: hsl(30, 20%, 70%);             /* light wood tone */
+  --secondary-foreground: hsl(30, 30%, 20%);  /* darker wood for contrast */
+  --destructive: hsl(0, 80%, 55%);            /* calm red for alerts */
+  --muted: hsl(40, 30%, 90%);                 /* muted ivory */
+  --muted-foreground: hsl(30, 15%, 35%);      /* subtle warm gray */
+  --accent: hsl(140, 30%, 40%);               /* deep green – elegant highlight */
+  --accent-foreground: hsl(140, 20%, 90%);    /* pale greenish-beige */
+  --border: hsl(30, 15%, 80%);                /* soft brown-gray */
+  --input: hsl(30, 15%, 92%);                 /* light ivory input background */
+  --ring: hsl(30, 15%, 75%);                  /* warm gray ring */
+}
+
+.dark {
+  --background: hsl(30, 15%, 8%);             /* almost-black with warm tint */
+  --foreground: hsl(40, 25%, 90%);            /* light beige text */
+  --primary: hsl(0, 0%, 90%);                 /* classic white piece */
+  --primary-foreground: hsl(0, 0%, 10%);      /* black foreground on white */
+  --secondary: hsl(30, 20%, 25%);             /* dark wood tone */
+  --secondary-foreground: hsl(30, 20%, 85%);  /* soft beige contrast */
+  --destructive: hsl(0, 60%, 50%);            /* alert red */
+  --muted: hsl(30, 10%, 25%);                 /* muted brown-gray */
+  --muted-foreground: hsl(30, 10%, 65%);      /* soft warm gray */
+  --accent: hsl(140, 25%, 55%);               /* muted green */
+  --accent-foreground: hsl(140, 25%, 15%);    /* dark green contrast */
+  --border: hsl(30, 10%, 30%);                /* dark warm border */
+  --input: hsl(30, 10%, 20%);                 /* input bg blend */
+  --ring: hsl(30, 10%, 50%);                  /* warm gray ring */
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--background);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+}
+
+
+@layer base {
+  img {
+    @apply inline;
+  }
+}
