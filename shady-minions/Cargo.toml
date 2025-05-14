@@ -1,0 +1,14 @@
+[package]
+name = "shady-minions"
+version = "0.1.0"
+edition = "2021"
+license = "BSD-3-Clause"
+description = "ShadCN inspired components for Yew."
+repository = "https://github.com/illuminodes"
+readme = "README.md"
+homepage = "https://github.com/illuminodes"
+
+[dependencies]
+gloo = { version = "0.11", features = ["events"], default-features = false }
+web-sys = { version = "0.3", features = ["HtmlFormElement"] } 
+yew = "0.21"
