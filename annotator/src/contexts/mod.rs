@@ -1,4 +1,2 @@
-pub mod live_game;
 pub mod configs;
-
-
+pub mod live_game;

@@ -75,9 +75,10 @@ impl Reducible for AnnotatedGame {
                 let Ok(new_position) = game_position.clone().play(&mv) else {
                     return Rc::new(Self { ..(*self).clone() });
                 };
-                let mut pgn_game = self.pgn_game.clone().new_move(
-                    shakmaty::san::SanPlus::from_move(game_position, &mv),
-                );
+                let mut pgn_game = self
+                    .pgn_game
+                    .clone()
+                    .new_move(shakmaty::san::SanPlus::from_move(game_position, &mv));
                 if new_position.is_checkmate() || new_position.is_stalemate() {
                     if let Some(outcome) = new_position.outcome() {
                         pgn_game = pgn_game.add_result(outcome);

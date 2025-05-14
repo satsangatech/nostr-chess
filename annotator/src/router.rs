@@ -24,4 +24,3 @@ pub fn annotator_router() -> Html {
 
     }
 }
-

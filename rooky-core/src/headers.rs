@@ -8,7 +8,7 @@ pub enum RookyHeader {
     White,
     Black,
     GameResult,
-    // TODO 
+    // TODO
     // Defin RTR headers
 }
 impl TryFrom<&[u8]> for RookyHeader {

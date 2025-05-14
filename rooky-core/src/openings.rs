@@ -1,10 +1,10 @@
 pub static ECO_OPENINGS: std::sync::LazyLock<Vec<EcoOpening>> = std::sync::LazyLock::new(|| {
     const OPENING_TABLES: [&str; 5] = [
-        include_str!("../../chess-openings/a.tsv"),
-        include_str!("../../chess-openings/b.tsv"),
-        include_str!("../../chess-openings/c.tsv"),
-        include_str!("../../chess-openings/d.tsv"),
-        include_str!("../../chess-openings/e.tsv"),
+        include_str!("../../openings/a.tsv"),
+        include_str!("../../openings/b.tsv"),
+        include_str!("../../openings/c.tsv"),
+        include_str!("../../openings/d.tsv"),
+        include_str!("../../openings/e.tsv"),
     ];
     OPENING_TABLES
         .iter()

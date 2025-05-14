@@ -38,14 +38,14 @@ pub struct RookyGame {
     /// `[Site "St. Petersburg RUS"]`
     /// `[Site "Riga LAT"]`
     pub site: crate::pgn_standards::PgnSite,
-    /// The Round tag The Round tag value gives the playing round for the game. In a match competition, 
-    /// this value is the number of the game played. If the use of a round number is inappropriate, 
-    /// then the field should be a single hyphen character. If the round is unknown, 
-    /// a single question mark should appear as the tag value. 
+    /// The Round tag The Round tag value gives the playing round for the game. In a match competition,
+    /// this value is the number of the game played. If the use of a round number is inappropriate,
+    /// then the field should be a single hyphen character. If the round is unknown,
+    /// a single question mark should appear as the tag value.
     ///
-    /// Some organizers employ unusual round designations and have multipart playing rounds and sometimes 
-    /// even have conditional rounds. In these cases, a multipart round identifier can be made from a sequence of 
-    /// integer round numbers separated by periods. The leftmost integer represents the most significant round and 
+    /// Some organizers employ unusual round designations and have multipart playing rounds and sometimes
+    /// even have conditional rounds. In these cases, a multipart round identifier can be made from a sequence of
+    /// integer round numbers separated by periods. The leftmost integer represents the most significant round and
     /// succeeding integers represent round numbers in descending hierarchical order.
     pub round: crate::pgn_standards::PgnRound,
     pub date: chrono::NaiveDate,

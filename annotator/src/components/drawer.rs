@@ -191,4 +191,3 @@ pub fn left_drawer(props: &BottomDrawerProps) -> Html {
         </>
     }
 }
-

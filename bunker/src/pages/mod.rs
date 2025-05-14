@@ -1,8 +1,8 @@
 mod annotate;
+mod detail;
 mod games;
 mod home;
 mod search;
-mod detail;
 pub use annotate::*;
 pub use detail::*;
 pub use games::*;

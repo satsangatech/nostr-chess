@@ -1,0 +1,40 @@
+stages:
+  - check
+  - test
+  - build
+  - deploy
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - target/
+
+check_workspace:
+  stage: check
+  tags:
+    - ansible
+  script:
+    - cargo check --release
+
+lint_workspace:
+  stage: check
+  tags:
+    - ansible
+  script:
+    - cargo clippy --release -- -D warnings
+
+format_workspace:
+  stage: check
+  tags:
+    - ansible
+  script:
+    - cargo fmt --all
+    - cargo fmt --check
+
+test_workspace:
+  stage: test
+  tags:
+    - ansible
+  script:
+    - cargo test --release
+

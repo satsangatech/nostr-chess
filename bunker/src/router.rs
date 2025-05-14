@@ -75,4 +75,3 @@ pub fn resin_pages() -> Html {
         }}/>
     }
 }
-

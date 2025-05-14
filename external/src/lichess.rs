@@ -155,10 +155,10 @@ impl LichessClient {
     }
     /// Stream lichess game history  
     ///
-    /// This function will return a stream of lichess games. 
-    /// The stream will be closed when the lichess server closes the connection. 
+    /// This function will return a stream of lichess games.
+    /// The stream will be closed when the lichess server closes the connection.
     ///
-    /// # Errors 
+    /// # Errors
     ///
     /// This function will return an error if the lichess server returns an error.
     #[allow(clippy::future_not_send)]
@@ -247,7 +247,7 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
- //   #[wasm_bindgen_test]
+    //   #[wasm_bindgen_test]
     async fn _test_lichess_client() {
         let client = LichessClient::default();
         let query = LichessGameQuery {

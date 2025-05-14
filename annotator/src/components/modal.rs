@@ -96,5 +96,3 @@ pub fn left_modal(props: &ModalProps) -> Html {
         </>
     }
 }
-
-

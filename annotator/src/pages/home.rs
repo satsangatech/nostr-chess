@@ -1,7 +1,6 @@
 use shady_minions::ui::{
-    Button, Card, CardContent, CardHeader, CardTitle, DropdownMenu, DropdownMenuContent,
-    DropdownMenuItem, DropdownMenuTrigger, Input, InputType, LeftDrawer, Modal, Tabs, TabsContent,
-    TabsList, TabsTrigger,
+    Button, Card, CardContent, CardHeader, CardTitle, Input, InputType, LeftDrawer, Modal, Tabs,
+    TabsContent, TabsList, TabsTrigger,
 };
 use web_sys::wasm_bindgen::JsCast;
 use yew::prelude::*;
@@ -625,7 +624,7 @@ pub fn annotation_display(props: &ExpertAnnotationProps) -> Html {
     let ExpertAnnotationProps {
         next_move,
         legal_moves,
-        ready_move,
+        ready_move: _,
     } = props;
     let is_selecting = next_move.is_some();
 
@@ -684,7 +683,7 @@ pub fn san_move_blocks(props: &ExpertAnnotationProps) -> Html {
     let ExpertAnnotationProps {
         next_move: _,
         legal_moves,
-        ready_move,
+        ready_move: _,
     } = props;
 
     html! {
