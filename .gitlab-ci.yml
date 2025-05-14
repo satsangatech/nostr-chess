@@ -28,8 +28,7 @@ format_workspace:
   tags:
     - ansible
   script:
-    - cargo fmt --all
-    - cargo fmt --check
+    - cargo fmt --all --check
 
 test_workspace:
   stage: test
