@@ -17,7 +17,7 @@ pub fn annotator_router() -> Html {
         <Switch<AnnotatorRoute> render = { move |switch: AnnotatorRoute| {
             match switch {
                 AnnotatorRoute::Home => html! { <crate::HomePage /> },
-                AnnotatorRoute::KeySettings => html! { <h1>{ "Key Settings" }</h1> },
+                AnnotatorRoute::KeySettings => html! { <crate::KeyRecoveryPage /> },
                 AnnotatorRoute::RelaySettings => html! { <h1>{ "Relay Settings" }</h1> },
             }}}
         />
