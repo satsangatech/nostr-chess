@@ -7,3 +7,5 @@ Uploaded initial commit
 ## [1.1.0] - 2025-05-16
 ### Added
 - Added Language support for annotator app.
+- Added link to key recovery page on settings drawer
+- Added Key recovery options page (show secret key, show mnemonic, delete keys)

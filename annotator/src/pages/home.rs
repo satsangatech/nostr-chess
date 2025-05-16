@@ -1,9 +1,11 @@
+use crate::router::AnnotatorRoute;
 use shady_minions::ui::{
     Button, Card, CardContent, CardHeader, CardTitle, Input, InputType, LeftDrawer, Modal, Tabs,
     TabsContent, TabsList, TabsTrigger,
 };
 use web_sys::wasm_bindgen::JsCast;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
 #[function_component(HomePage)]
 pub fn home_page() -> Html {
@@ -50,8 +52,13 @@ pub fn settings_drawer() -> Html {
             is_open.set(!*is_open);
         })
     };
+    let navigator = use_navigator().unwrap();
 
-    // Get language context
+    let go_to_key_recovery = {
+        let navigator = navigator.clone();
+        Callback::from(move |_| navigator.push(&AnnotatorRoute::KeySettings))
+    };
+
     let language_ctx = crate::contexts::language::use_language_ctx();
 
     html! {
@@ -60,9 +67,15 @@ pub fn settings_drawer() -> Html {
                 <lucide_yew::Menu class="size-4" />
             </Button>
             <LeftDrawer {is_open} >
-                <h3>{ language_ctx.t("common_settings") }</h3>
-                <div>
-                    <p>{ language_ctx.t("settings_title") }</p>
+                <h3 class="text-xl font-bold mb-4">{language_ctx.t("common_settings")}</h3>
+                <div class="space-y-4">
+                    <Button
+                        onclick={go_to_key_recovery}
+                        class="w-full justify-start"
+                    >
+                        <lucide_yew::Key class="w-5 h-5 mr-2" />
+                        <span>{ language_ctx.t("settings_key_recovery") }</span>
+                    </Button>
                 </div>
             </LeftDrawer>
         </>
