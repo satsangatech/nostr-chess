@@ -56,11 +56,13 @@ fn app() -> Html {
             <nostr_minions::relay_pool::NostrRelayPoolProvider relays={(*relays).clone()}>
                 <div class={classes!("h-dvh", "w-dvw")}>
                 <LoginCheck>
+                <annotator::language::LanguageConfigsProvider>
                 <annotator::configs::AnnotatorConfigProvider>
                 <annotator::live_game::AnnotatedGameProvider>
                     <annotator::AnnotatorRouter />
                 </annotator::live_game::AnnotatedGameProvider>
                 </annotator::configs::AnnotatorConfigProvider>
+                </annotator::language::LanguageConfigsProvider>
                 </LoginCheck>
                 </div>
             </nostr_minions::relay_pool::NostrRelayPoolProvider>
@@ -115,7 +117,9 @@ fn login_check(props: &yew::html::ChildrenProps) -> Html {
                 <SplashScreen />
             </div>
             <div class={login_page_class}>
-                //<annotator::NostrLogin />
+                <annotator::language::LanguageConfigsProvider>
+                    <annotator::NostrLogin />
+                </annotator::language::LanguageConfigsProvider>
             </div>
             <div class={children_class}>
                 {props.children.clone()}

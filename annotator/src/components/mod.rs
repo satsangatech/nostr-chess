@@ -15,6 +15,7 @@ pub struct RookyGameProps {
 pub fn share_rooky_game(props: &RookyGameProps) -> Html {
     let relay_ctx = use_context::<nostr_minions::relay_pool::NostrRelayPoolStore>()
         .expect("Relay context not found");
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let Some(keypair) = nostr_minions::key_manager::use_nostr_key() else {
         return html! {};
     };
@@ -42,7 +43,7 @@ pub fn share_rooky_game(props: &RookyGameProps) -> Html {
         <Button {onclick}>
             <lucide_yew::Share2
                 class={classes!("size-5")} />
-            <span class="ml-2">{"Share to Nostr Socials"}</span>
+            <span class="ml-2">{ language_ctx.t("share_to_nostr") }</span>
         </Button>
     }
 }
@@ -51,6 +52,7 @@ use nostr_minions::nostro2_signer::nostro2_nips::Nip17;
 pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
     let relay_ctx = use_context::<nostr_minions::relay_pool::NostrRelayPoolStore>()
         .expect("Relay context not found");
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let Some(keypair) = nostr_minions::key_manager::use_nostr_key() else {
         return html! {};
     };
@@ -87,7 +89,7 @@ pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
             <PopoverTrigger>
                 <Button>
                     <lucide_yew::MessageSquareLock class={classes!("size-5")} />
-                    <span class="ml-2">{"Send Nostr DM"}</span>
+                    <span class="ml-2">{ language_ctx.t("share_send_dm") }</span>
                 </Button>
             </PopoverTrigger>
             <PopoverContent>
@@ -95,7 +97,7 @@ pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
                     <Input
                         name="recipient"
                         r#type={shady_minions::ui::InputType::Text}
-                        placeholder="Enter recipient Nostr ID"
+                        placeholder={ language_ctx.t("share_enter_recipient") }
                         class={classes!("w-full", "mb-2", "min-w-32")} />
                     <Button r#type={shady_minions::ui::ButtonType::Submit}>
                         <lucide_yew::MessageSquareLock class={classes!("size-5")} />
@@ -108,6 +110,7 @@ pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
 
 #[function_component(SaveTxtRookyGame)]
 pub fn save_txt_rooky_game(props: &RookyGameProps) -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let game = props.game.clone();
     let mut note: nostr_minions::nostro2::note::NostrNote = game.clone().into();
     note.serialize_id().expect("Failed to serialize ID");
@@ -146,7 +149,7 @@ pub fn save_txt_rooky_game(props: &RookyGameProps) -> Html {
     html! {
         <Button {onclick}>
             <lucide_yew::Download class={classes!("size-5")} />
-            <span class="ml-2">{"Save as PGN file"}</span>
+            <span class="ml-2">{ language_ctx.t("share_save_pgn") }</span>
         </Button>
     }
 }

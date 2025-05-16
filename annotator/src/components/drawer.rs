@@ -12,6 +12,7 @@ pub struct LeftDrawerProps {
 pub fn left_drawer(props: &LeftDrawerProps) -> Html {
     let is_open = props.is_open.clone();
     let drawer_ref = use_node_ref();
+    let language_ctx = crate::contexts::language::use_language_ctx();
 
     let close = {
         let is_open = is_open.clone();
@@ -87,7 +88,7 @@ pub fn left_drawer(props: &LeftDrawerProps) -> Html {
             <div
                 ref={drawer_ref}
                 class={drawer_class}
-                aria-label="Drawer"
+                aria-label={ language_ctx.t("common_drawer") }
             >
                 <div class="flex h-full flex-col">
                     <div class="flex-1 overflow-auto p-4">
@@ -109,6 +110,7 @@ pub struct BottomDrawerProps {
 pub fn left_drawer(props: &BottomDrawerProps) -> Html {
     let is_open = props.is_open.clone();
     let drawer_ref = use_node_ref();
+    let language_ctx = crate::contexts::language::use_language_ctx();
 
     let close = {
         let is_open = is_open.clone();
@@ -184,7 +186,7 @@ pub fn left_drawer(props: &BottomDrawerProps) -> Html {
             <div
                 ref={drawer_ref}
                 class={drawer_class}
-                aria-label="Drawer"
+                aria-label={ language_ctx.t("common_drawer") }
             >
                 { for props.children.iter() }
             </div>
