@@ -12,6 +12,7 @@ pub struct ModalProps {
 pub fn left_modal(props: &ModalProps) -> Html {
     let is_open = props.is_open.clone();
     let modal_ref = use_node_ref();
+    let language_ctx = crate::contexts::language::use_language_ctx();
 
     let close = {
         let is_open = is_open.clone();
@@ -87,7 +88,7 @@ pub fn left_modal(props: &ModalProps) -> Html {
             <div
                 ref={modal_ref}
                 class={modal_class}
-                aria-label="Drawer"
+                aria-label={ language_ctx.t("common_drawer") }
             >
                 <div class="max-w-sm h-fit max-h-sm mx-auto pointer-events-auto">
                 { for props.children.iter() }

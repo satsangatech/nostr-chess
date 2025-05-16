@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @source "../src/**";
-@source "../../../shady-minions/src/**";
+@source "../../shady-minions/src/**";
 
 :root {
   --background: hsl(40, 30%, 95%);            /* warm ivory */

@@ -50,15 +50,19 @@ pub fn settings_drawer() -> Html {
             is_open.set(!*is_open);
         })
     };
+
+    // Get language context
+    let language_ctx = crate::contexts::language::use_language_ctx();
+
     html! {
         <>
             <Button {onclick}>
                 <lucide_yew::Menu class="size-4" />
             </Button>
             <LeftDrawer {is_open} >
-                <h3>{ "Settings" }</h3>
+                <h3>{ language_ctx.t("common_settings") }</h3>
                 <div>
-                    <p>{ "Settings content goes here." }</p>
+                    <p>{ language_ctx.t("settings_title") }</p>
                 </div>
             </LeftDrawer>
         </>
@@ -67,10 +71,17 @@ pub fn settings_drawer() -> Html {
 
 #[function_component(ExperienceSelector)]
 pub fn experience_selector() -> Html {
+    // Get language context
+    let language_ctx = crate::contexts::language::use_language_ctx();
+
     html! {
             <TabsList class="flex flex-1">
-                <TabsTrigger value={crate::configs::ExperienceLevel::Rookie.to_string()}>{ "Rookie" }</TabsTrigger>
-                <TabsTrigger value={crate::configs::ExperienceLevel::Expert.to_string()}>{ "Expert" }</TabsTrigger>
+                <TabsTrigger value={crate::configs::ExperienceLevel::Rookie.to_string()}>
+                    { language_ctx.t("common_rookie") }
+                </TabsTrigger>
+                <TabsTrigger value={crate::configs::ExperienceLevel::Expert.to_string()}>
+                    { language_ctx.t("common_expert") }
+                </TabsTrigger>
             </TabsList>
 
     }
@@ -81,6 +92,7 @@ pub fn game_details_modal() -> Html {
     let game_ctx = crate::live_game::use_annotated_game();
     let game = game_ctx.pgn_game();
     let is_open = use_state(|| true);
+    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
         <>
             <Button
@@ -95,16 +107,16 @@ pub fn game_details_modal() -> Html {
             <Card>
                 <CardHeader>
                     <CardTitle>
-                        { "Game Details" }
+                        { language_ctx.t("common_game_details") }
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div class="flex flex-col">
-                        <p>{ format!("Event: {}", game.event) }</p>
-                        <p>{ format!("Site: {}", game.site) }</p>
-                        <p>{ format!("Date: {}", game.date) }</p>
-                        <p>{ format!("White: {}", game.white) }</p>
-                        <p>{ format!("Black: {}", game.black) }</p>
+                        <p>{ format!("{}: {}", language_ctx.t("game_details_event"), game.event) }</p>
+                        <p>{ format!("{}: {}", language_ctx.t("game_details_site"), game.site) }</p>
+                        <p>{ format!("{}: {}", language_ctx.t("game_details_date"), game.date) }</p>
+                        <p>{ format!("{}: {}", language_ctx.t("game_details_white"), game.white) }</p>
+                        <p>{ format!("{}: {}", language_ctx.t("game_details_black"), game.black) }</p>
                     </div>
                 </CardContent>
             </Card>
@@ -116,6 +128,7 @@ pub fn game_details_modal() -> Html {
 #[function_component(RookieAnnotation)]
 pub fn rookie_annotation() -> Html {
     let next_role = use_state(|| None::<shakmaty::Role>);
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let clear_role = {
         let next_role = next_role.clone();
         Callback::from(move |_| {
@@ -133,7 +146,7 @@ pub fn rookie_annotation() -> Html {
                                 <h3 class={"text-2xl"}>{format!("{role:#?}")}</h3>
                             </CardContent>
                         </Card>
-                        <h3 class="mb-4">{ "Select a move" }</h3>
+                        <h3 class="mb-4">{ language_ctx.t("annotation_select_move") }</h3>
                         <Button
                             class="float-left text-white"
                             onclick={clear_role}>
@@ -169,9 +182,10 @@ pub fn piece_selection(props: &PieceSelectionProps) -> Html {
         })
     };
 
+    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
         <div class="flex flex-col p-3 items-center w-full max-w-md mx-auto">
-            <h3 class="mb-4">{ "Select a piece to move" }</h3>
+            <h3 class="mb-4">{ language_ctx.t("annotation_select_piece") }</h3>
             <div class="grid grid-cols-2 gap-4 w-full">
                 <PieceSelector
                     piece={shakmaty::Role::Pawn}
@@ -204,6 +218,7 @@ pub struct PieceSelectorProps {
 #[function_component(PieceSelector)]
 pub fn piece_selector(props: &PieceSelectorProps) -> Html {
     let game_ctx = crate::live_game::use_annotated_game();
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let PieceSelectorProps { piece, onclick } = props;
     let can_be_moved = game_ctx.legal_moves().iter().any(|m| &m.role() == piece);
     let turn = match game_ctx.color_turn() {
@@ -279,12 +294,12 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
             />
             <span class="text-sm text-center mt-2">
             { match piece {
-                shakmaty::Role::Pawn => "Pawn",
-                shakmaty::Role::Knight => "Knight",
-                shakmaty::Role::Bishop => "Bishop",
-                shakmaty::Role::Rook => "Rook",
-                shakmaty::Role::Queen => "Queen",
-                shakmaty::Role::King => "King",
+                shakmaty::Role::Pawn => language_ctx.t("pieces_pawn"),
+                shakmaty::Role::Knight => language_ctx.t("pieces_knight"),
+                shakmaty::Role::Bishop => language_ctx.t("pieces_bishop"),
+                shakmaty::Role::Rook => language_ctx.t("pieces_rook"),
+                shakmaty::Role::Queen => language_ctx.t("pieces_queen"),
+                shakmaty::Role::King => language_ctx.t("pieces_king"),
             } }
             </span>
         </Button>
@@ -294,6 +309,7 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
 #[function_component(MoveSelection)]
 pub fn move_selection(props: &PieceSelectionProps) -> Html {
     let game_ctx = crate::live_game::use_annotated_game();
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let next_move = use_state(|| None::<shakmaty::Move>);
     let legal_moves = game_ctx.legal_moves();
     let legal_moves = legal_moves
@@ -398,7 +414,7 @@ pub fn move_selection(props: &PieceSelectionProps) -> Html {
                 })
             }>
             <span class="text-sm text-center mt-2 text-white">
-                { "Play Move" }
+                { language_ctx.t("annotation_play_move") }
             </span>
         </Button>
         </div>
@@ -620,6 +636,7 @@ pub struct ExpertAnnotationProps {
 #[function_component(AnnotationDisplay)]
 pub fn annotation_display(props: &ExpertAnnotationProps) -> Html {
     let game_ctx = crate::live_game::use_annotated_game();
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let last_position = game_ctx.last_game_position();
     let ExpertAnnotationProps {
         next_move,
@@ -642,7 +659,7 @@ pub fn annotation_display(props: &ExpertAnnotationProps) -> Html {
                 }
             })
     } else {
-        "Select a piece".to_string()
+        language_ctx.t("annotation_select_piece").to_string()
     };
 
     html! {
