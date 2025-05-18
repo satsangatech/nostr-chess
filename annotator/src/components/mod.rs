@@ -1,4 +1,3 @@
-pub mod drawer;
 pub mod modal;
 
 use yew::prelude::*;
