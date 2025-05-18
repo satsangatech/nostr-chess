@@ -20,6 +20,8 @@
   "settings_language": "Language",
   "settings_dark_mode": "Dark Mode",
   "settings_default_experience": "Default Experience",
+  "settings_default_level": "Default Level",
+  "settings_default_level_description": "Select your default experience level",
   "settings_auto_save": "Auto Save",
   "settings_key_recovery": "Key Recovery",
   

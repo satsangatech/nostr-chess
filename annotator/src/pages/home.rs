@@ -1,9 +1,10 @@
 use crate::router::AnnotatorRoute;
 use shady_minions::ui::{
-    Button, Card, CardContent, CardHeader, CardTitle, Input, InputType, LeftDrawer, Modal, Tabs,
-    TabsContent, TabsList, TabsTrigger,
+    Button, Card, CardContent, CardHeader, CardTitle, Input, InputType, LeftDrawer, Modal, Switch,
+    Tabs, TabsContent, TabsList, TabsTrigger,
 };
 use web_sys::wasm_bindgen::JsCast;
+use web_sys::MouseEvent;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -48,16 +49,29 @@ pub fn settings_drawer() -> Html {
     let is_open = use_state(|| false);
     let onclick = {
         let is_open = is_open.clone();
-        Callback::from(move |_| {
+        Callback::from(move |_: MouseEvent| {
             is_open.set(!*is_open);
         })
     };
     let navigator = use_navigator().unwrap();
+    let config_ctx = crate::contexts::configs::use_annotator_config();
 
     let go_to_key_recovery = {
         let navigator = navigator.clone();
-        Callback::from(move |_| navigator.push(&AnnotatorRoute::KeySettings))
+        Callback::from(move |_: MouseEvent| navigator.push(&AnnotatorRoute::KeySettings))
     };
+
+    let set_experience_level = {
+        let config_ctx = config_ctx.clone();
+        move |level: crate::contexts::configs::ExperienceLevel| {
+            config_ctx.dispatch(
+                crate::contexts::configs::AnnotatorConfigAction::SetExperienceLevel(level),
+            );
+        }
+    };
+
+    let is_expert =
+        config_ctx.experience_level == crate::contexts::configs::ExperienceLevel::Expert;
 
     let language_ctx = crate::contexts::language::use_language_ctx();
 
@@ -67,14 +81,47 @@ pub fn settings_drawer() -> Html {
                 <lucide_yew::Menu class="size-4" />
             </Button>
             <LeftDrawer {is_open} >
-                <h3 class="text-xl font-bold mb-4">{language_ctx.t("common_settings")}</h3>
-                <div class="space-y-4">
+                <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{language_ctx.t("common_settings")}</h3>
+                <div class="space-y-4 w-full">
+                    <div class="rounded-lg bg-slate-50 p-3 sm:p-4 shadow-sm">
+                        <div class="mb-1.5 sm:mb-2">
+                            <label class="text-sm sm:text-base font-medium block mb-0.5 sm:mb-1">
+                                { language_ctx.t("settings_default_level") }
+                            </label>
+                            <p class="text-xs sm:text-sm text-muted-foreground">
+                                { language_ctx.t("settings_default_level_description") }
+                            </p>
+                        </div>
+                        <div class="mt-2">
+                            <div class="flex items-center justify-between px-1">
+                                <div class="flex items-center">
+                                    <span class="text-sm font-medium mr-2 sm:mr-3">{ language_ctx.t("common_rookie") }</span>
+                                    <Switch
+                                        checked={is_expert}
+                                        onchange={
+                                            let set_experience_level = set_experience_level.clone();
+                                            Callback::from(move |checked: bool| {
+                                                if checked {
+                                                    set_experience_level(crate::contexts::configs::ExperienceLevel::Expert);
+                                                } else {
+                                                    set_experience_level(crate::contexts::configs::ExperienceLevel::Rookie);
+                                                }
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <span class="text-sm font-medium ml-2 sm:ml-3">{ language_ctx.t("common_expert") }</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <Button
                         onclick={go_to_key_recovery}
-                        class="w-full justify-start"
+                        class="w-full flex items-center justify-start py-2 px-3 sm:py-3 sm:px-4 h-auto bg-slate-100 border border-slate-200 text-sm sm:text-base shadow-sm break-words"
+                        variant={shady_minions::ui::ButtonVariant::Outline}
                     >
-                        <lucide_yew::Key class="w-5 h-5 mr-2" />
-                        <span>{ language_ctx.t("settings_key_recovery") }</span>
+                        <lucide_yew::Key class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 flex-shrink-0 text-primary" />
+                        <span class="font-medium truncate">{ language_ctx.t("settings_key_recovery") }</span>
                     </Button>
                 </div>
             </LeftDrawer>
