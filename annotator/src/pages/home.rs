@@ -281,18 +281,11 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
     let language_ctx = crate::contexts::language::use_language_ctx();
     let PieceSelectorProps { piece, onclick } = props;
     let can_be_moved = game_ctx.legal_moves().iter().any(|m| &m.role() == piece);
-    let turn = match game_ctx.color_turn() {
-        shakmaty::Color::White => 'w',
-        shakmaty::Color::Black => 'b',
-    };
-    let image_url = match piece {
-        shakmaty::Role::Pawn => format!("/public/img/pieces/{turn}P.png"),
-        shakmaty::Role::Knight => format!("/public/img/pieces/{turn}N.png"),
-        shakmaty::Role::Bishop => format!("/public/img/pieces/{turn}B.png"),
-        shakmaty::Role::Rook => format!("/public/img/pieces/{turn}R.png"),
-        shakmaty::Role::Queen => format!("/public/img/pieces/{turn}Q.png"),
-        shakmaty::Role::King => format!("/public/img/pieces/{turn}K.png"),
-    };
+    let image_url = format!(
+        "/public/assets/img/{}{}.svg",
+        game_ctx.color_turn().char(),
+        piece.upper_char()
+    );
 
     html! {
         <Button
@@ -551,12 +544,19 @@ pub struct SquaresPreviewProps {
 pub fn squares_preview(props: &SquaresPreviewProps) -> Html {
     let board_ref = use_node_ref();
     let next_move = props.next_move.clone();
+    let game_ctx = crate::live_game::use_annotated_game();
+    let role = next_move.role();
+    let color = game_ctx.color_turn();
     let Some(from_square) = next_move.from() else {
         return html! {};
     };
     let to_square = next_move.to();
     let board_id = format!("game-{next_move}");
-
+    let piece_image_url = format!(
+        "/public/assets/img/{}{}.svg",
+        color.char(),
+        role.upper_char()
+    );
     let game_board = use_mut_ref(|| None::<chessboard_js::ChessBoardJs>);
 
     {
@@ -575,6 +575,7 @@ pub fn squares_preview(props: &SquaresPreviewProps) -> Html {
         });
     }
     {
+        let piece_image_url = piece_image_url.clone();
         use_effect_with(
             (board_ref.clone(), next_move.clone()),
             move |(board_ref, _next_move)| {
@@ -598,17 +599,28 @@ pub fn squares_preview(props: &SquaresPreviewProps) -> Html {
                         .first()
                         .unwrap()
                         .unchecked_ref::<web_sys::HtmlElement>();
-                    let from_classes = classes!(
-                        from_ele.class_name(),
-                        "border",
-                        "border-4",
-                        "border-red-500"
-                    );
                     let to_classes =
                         classes!(to_ele.class_name(), "border", "border-4", "border-blue-500");
-
-                    from_ele.set_class_name(&from_classes.to_string());
                     to_ele.set_class_name(&to_classes.to_string());
+
+                    let document = web_sys::window().unwrap().document().unwrap();
+                    // Clear the inner HTML of the square.
+                    from_ele.set_inner_html("");
+                    // A div to contain the piece image with proper styling
+                    let container = document.create_element("div").unwrap();
+                    let container_div = container.dyn_into::<web_sys::HtmlElement>().unwrap();
+                    container_div
+                        .set_attribute("style", "width: 100%; height: 100%; position: relative;")
+                        .unwrap();
+                    let img = document.create_element("img").unwrap();
+                    let img_element = img.dyn_into::<web_sys::HtmlElement>().unwrap();
+                    img_element.set_attribute("src", &piece_image_url).unwrap();
+                    img_element.set_attribute(
+                        "style",
+                        "position: absolute; width: 80%; height: 80%; top: 10%; left: 10%; z-index: 2;"
+                    ).unwrap();
+                    container_div.append_child(&img_element).unwrap();
+                    from_ele.append_child(&container_div).unwrap();
                 }
                 || {}
             },

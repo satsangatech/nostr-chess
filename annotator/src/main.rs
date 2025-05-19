@@ -132,7 +132,7 @@ pub fn splash_screen() -> Html {
     html! {
         <div class={classes!("size-full", "flex", "flex-col", "gap-2", "justify-center", "items-center", "bg-black")}>
             <img
-                src="public/img/pieces/wR.png"
+                src="/public/assets/img/wR.svg"
                 alt="Rooky Logo"
                 class={classes!("size-20", "object-contain")}
             />
@@ -304,7 +304,11 @@ fn available_moves_selector(props: &MoveSelectorProps) -> Html {
                     })
                 };
                 let piece = piece.of(game_ctx.color_turn());
-                let url = format!("public/img/pieces/{}{}.png", piece.color.char(), piece.role.upper_char());
+                let url = format!(
+                    "/public/assets/img/{}{}.svg",
+                    piece.color.char(),
+                    piece.role.upper_char()
+                );
                 let name = format!("{}{}", piece.color.char(), piece.role.upper_char());
                 html! {
                     <div {onclick} key={name.clone()} class="relative h-12 w-12">

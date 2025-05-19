@@ -1,11 +1,20 @@
 # CHANGELOG
+<!-- Latest on top -->
 
-## Start of Project (13/05/2025)
+## [1.1.0] - 2025-05-19
+### Added
+- Added SVG icons for any representation of pieces across the app.
 
-Uploaded initial commit
+## [1.1.0] - 2025-05-18
+### Added
+- Added a shady_minions Switch in the settings drawer that will toggle the home default view.
 
 ## [1.1.0] - 2025-05-16
 ### Added
 - Added Language support for annotator app.
 - Added link to key recovery page on settings drawer
 - Added Key recovery options page (show secret key, show mnemonic, delete keys)
+
+## Start of Project (13/05/2025)
+Uploaded initial commit
+
