@@ -134,15 +134,16 @@ impl RookyGame {
     }
     #[must_use]
     pub fn to_pgn(&self) -> String {
+        use std::fmt::Write;
         let mut pgn = String::new();
-        pgn.push_str(&format!("[Event \"{}\"]\n", self.event));
-        pgn.push_str(&format!("[Site \"{}\"]\n", self.site));
-        pgn.push_str(&format!("[Round \"{}\"]\n", self.round));
-        pgn.push_str(&format!("[Date \"{}\"]\n", self.date.format("%Y.%m.%d")));
-        pgn.push_str(&format!("[White \"{}\"]\n", self.white));
-        pgn.push_str(&format!("[Black \"{}\"]\n", self.black));
-        pgn.push_str(&format!("[Result \"{}\"]\n", self.outcome));
-        pgn.push('\n');
+        writeln!(pgn, "[Event \"{}\"]", self.event).unwrap();
+        writeln!(pgn, "[Site \"{}\"]", self.site).unwrap();
+        writeln!(pgn, "[Round \"{}\"]", self.round).unwrap();
+        writeln!(pgn, "[Date \"{}\"]", self.date.format("%Y.%m.%d")).unwrap();
+        writeln!(pgn, "[White \"{}\"]", self.white).unwrap();
+        writeln!(pgn, "[Black \"{}\"]", self.black).unwrap();
+        writeln!(pgn, "[Result \"{}\"]", self.outcome).unwrap();
+        writeln!(pgn).unwrap();
         for (move_num, moves) in self.moves.chunks(2).enumerate() {
             let move_num = move_num + 1;
             let white_move = moves
@@ -150,12 +151,12 @@ impl RookyGame {
                 .map(std::string::ToString::to_string)
                 .unwrap_or_default();
             let Some(black_move) = moves.get(1).map(std::string::ToString::to_string) else {
-                pgn.push_str(&format!("{move_num}. {white_move} "));
+                write!(pgn, "{move_num}. {white_move} ").unwrap();
                 break;
             };
-            pgn.push_str(&format!("{move_num}. {white_move} {black_move} "));
+            write!(pgn, "{move_num}. {white_move} {black_move} ").unwrap();
         }
-        pgn.push_str(&format!("{}\n", self.outcome));
+        writeln!(pgn, "{}", self.outcome).unwrap();
         pgn
     }
     #[must_use]
@@ -201,7 +202,7 @@ impl TryFrom<&[u8]> for RookyGame {
         reader.read_game(&mut game)?;
         if game.moves.is_empty() {
             return Err(crate::errors::ChessError::NotFound("No moves found"));
-        };
+        }
         Ok(game)
     }
 }

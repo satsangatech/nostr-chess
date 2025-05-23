@@ -255,7 +255,7 @@ fn key_recovery_section() -> Html {
                                 </div>
                             }
                         } else if *show_sensitive {
-                            if recovery_phrase.len() == 0 {
+                            if recovery_phrase.is_empty() {
                                 html! {
                                     <div class="bg-gray-100 p-4 rounded-lg">
                                         <div class="flex items-center text-gray-700 space-x-2">

@@ -54,17 +54,17 @@ fn app() -> Html {
         <yew_router::BrowserRouter>
         <nostr_minions::key_manager::NostrIdProvider>
             <nostr_minions::relay_pool::NostrRelayPoolProvider relays={(*relays).clone()}>
-                <div class={classes!("h-dvh", "w-dvw")}>
-                <LoginCheck>
                 <annotator::language::LanguageConfigsProvider>
                 <annotator::configs::AnnotatorConfigProvider>
-                <annotator::live_game::AnnotatedGameProvider>
-                    <annotator::AnnotatorRouter />
-                </annotator::live_game::AnnotatedGameProvider>
-                </annotator::configs::AnnotatorConfigProvider>
+                    <div class={classes!("h-dvh", "w-dvw")}>
+                        <LoginCheck>
+                        <annotator::live_game::AnnotatedGameProvider>
+                            <annotator::AnnotatorRouter />
+                        </annotator::live_game::AnnotatedGameProvider>
+                        </LoginCheck>
+                    </div>
+                    </annotator::configs::AnnotatorConfigProvider>
                 </annotator::language::LanguageConfigsProvider>
-                </LoginCheck>
-                </div>
             </nostr_minions::relay_pool::NostrRelayPoolProvider>
         </nostr_minions::key_manager::NostrIdProvider>
         </yew_router::BrowserRouter>
@@ -74,8 +74,16 @@ fn app() -> Html {
 #[function_component(LoginCheck)]
 fn login_check(props: &yew::html::ChildrenProps) -> Html {
     let key_ctx = nostr_minions::key_manager::use_nostr_id_ctx();
-    let loaded = key_ctx.loaded();
+    let config_ctx = annotator::configs::use_annotator_config();
+
+    let loaded = key_ctx.loaded() && config_ctx.loaded;
     let nostr_id = key_ctx.get_pubkey();
+
+    if !loaded {
+        return html! {
+            <SplashScreen />
+        };
+    }
 
     let visible = classes!(
         "fixed",
@@ -93,11 +101,11 @@ fn login_check(props: &yew::html::ChildrenProps) -> Html {
         "pointer-events-none",
         "opacity-0"
     );
-    let loading_page_class = classes!(if loaded {
-        hidden.clone()
-    } else {
-        visible.clone()
-    },);
+    // let loading_page_class = classes!(if loaded {
+    //     hidden.clone()
+    // } else {
+    //     visible.clone()
+    // },);
     let login_page_class = classes!(if loaded && nostr_id.is_none() {
         visible.clone()
     } else {
@@ -108,14 +116,11 @@ fn login_check(props: &yew::html::ChildrenProps) -> Html {
     } else {
         hidden.clone()
     },);
-    web_sys::console::log_1(
-        &format!("Loaded: {}, Nostr ID: {:?}", loaded, nostr_id.is_some()).into(),
-    );
+    // web_sys::console::log_1(
+    //     &format!("Loaded: {}, Nostr ID: {:?}", loaded, nostr_id.is_some()).into(),
+    // );
     html! {
         <>
-            <div class={loading_page_class}>
-                <SplashScreen />
-            </div>
             <div class={login_page_class}>
                 <annotator::language::LanguageConfigsProvider>
                     <annotator::NostrLogin />

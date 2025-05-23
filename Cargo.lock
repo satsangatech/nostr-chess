@@ -48,6 +48,7 @@ dependencies = [
  "serde_json",
  "shady-minions",
  "shakmaty",
+ "wasm-bindgen",
  "wasm-bindgen-test",
  "web-sys",
  "yew",

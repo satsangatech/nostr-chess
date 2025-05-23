@@ -1,5 +1,7 @@
+mod expert;
 pub mod modal;
-
+mod rookie;
+pub use rookie::RookieAnnotation;
 use yew::prelude::*;
 
 use nostr_minions::browser_api::IdbStoreManager;
