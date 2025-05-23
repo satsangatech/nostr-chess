@@ -181,6 +181,7 @@ pub fn key_handler(props: &AnnotatorConfigChildren) -> Html {
                     }
                     Err(e) => {
                         web_sys::console::error_1(&format!("Error loading config: {:?}", e).into());
+                        ctx.dispatch(AnnotatorConfigAction::Loaded);
                     }
                 }
             });

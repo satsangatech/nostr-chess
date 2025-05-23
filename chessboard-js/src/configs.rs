@@ -130,7 +130,7 @@ impl Default for ChessboardConfig {
             snapback_speed: AnimationSpeed::Fast,
             snap_speed: AnimationSpeed::Fast,
             trash_speed: AnimationSpeed::Fast,
-            piece_theme: "/public/img/pieces/{piece}.svg",
+            piece_theme: "/public/assets/img/{piece}.svg",
             on_drag_start: None,
             on_drop: None,
             on_snap_end: None,

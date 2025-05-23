@@ -96,35 +96,36 @@ pub struct LichessGameQuery {
 }
 impl std::fmt::Display for LichessGameQuery {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use std::fmt::Write;
         let mut min_url = format!("games/user/{}", self.username);
         if let Some(max) = self.max {
-            min_url.push_str(&format!("?max={max}"));
-        };
+            write!(min_url, "?max={max}")?;
+        }
         if let Some(rated) = self.rated {
-            min_url.push_str(&format!("&rated={rated}"));
-        };
+            write!(min_url, "&rated={rated}")?;
+        }
         if let Some(perf_type) = self.perf_type {
-            min_url.push_str(&format!("&perfType={perf_type}"));
-        };
+            write!(min_url, "&perfType={perf_type}")?;
+        }
         if let Some(since) = self.since {
-            min_url.push_str(&format!("&since={since}"));
-        };
+            write!(min_url, "&since={since}")?;
+        }
         if let Some(until) = self.until {
-            min_url.push_str(&format!("&until={until}"));
-        };
+            write!(min_url, "&until={until}")?;
+        }
         if let Some(color) = self.color {
-            min_url.push_str(&format!("&color={color}"));
-        };
+            write!(min_url, "&color={color}")?;
+        }
         if let Some(vs) = &self.vs {
-            min_url.push_str(&format!("&vs={vs}"));
-        };
+            write!(min_url, "&vs={vs}")?;
+        }
         if let Some(finished) = self.finished {
-            min_url.push_str(&format!("&finished={finished}"));
-        };
+            write!(min_url, "&finished={finished}")?;
+        }
         if let Some(ongoing) = self.ongoing {
-            min_url.push_str(&format!("&ongoing={ongoing}"));
-        };
-        min_url.push_str(&format!("&sort={}", self.sort));
+            write!(min_url, "&ongoing={ongoing}")?;
+        }
+        write!(min_url, "&sort={}", self.sort)?;
         write!(f, "{min_url}")
     }
 }
@@ -230,7 +231,7 @@ where
                     let new_bytes = web_sys::js_sys::Uint8Array::new(&chunk).to_vec();
                     this.buffer.extend_from_slice(&new_bytes);
                 }
-                Poll::Ready(Some(Err(_))) => continue, // skip error chunks
+                Poll::Ready(Some(Err(_))) => {} // skip error chunks
                 Poll::Ready(None) => {
                     // Stream ended
                     return Poll::Ready(None);
@@ -247,8 +248,10 @@ mod tests {
     use wasm_bindgen_test::wasm_bindgen_test;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
-    //   #[wasm_bindgen_test]
+    #[wasm_bindgen_test]
+    #[allow(clippy::future_not_send)]
     async fn _test_lichess_client() {
+        use futures_util::StreamExt;
         let client = LichessClient::default();
         let query = LichessGameQuery {
             username: "dadroatan".to_string(),
@@ -259,12 +262,9 @@ mod tests {
         assert!(stream.is_ok());
         let mut stream = stream.unwrap();
         let mut received = 0;
-        let mut buffer = Vec::new();
-        use futures_util::StreamExt;
         while let Some(game) = stream.next().await {
             wasm_bindgen_test::console_log!("Received game: {:?}", game);
             received += 1;
-            buffer.push(game);
         }
         assert!(received == 5);
     }

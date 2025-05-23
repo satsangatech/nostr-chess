@@ -139,7 +139,7 @@ where
                     let new_bytes = web_sys::js_sys::Uint8Array::new(&chunk).to_vec();
                     this.buffer.extend_from_slice(&new_bytes);
                 }
-                Poll::Ready(Some(Err(_))) => continue, // skip error chunks
+                Poll::Ready(Some(Err(_))) => {} // skip error chunks
                 Poll::Ready(None) => {
                     // Stream ended
                     return Poll::Ready(None);
@@ -158,7 +158,7 @@ mod tests {
 
     #[wasm_bindgen_test]
     #[allow(clippy::future_not_send)]
-    async fn test_get_pgn_games() {
+    async fn _test_get_pgn_games() {
         let client = ChessComClient::default();
         let mut response = client
             .find_games("Hikaru", 2025, 2)
