@@ -56,7 +56,6 @@
 
 @theme {
   --animate-loading-bar: fade-in-scale 1s ease-in-out infinite;
-
   @keyframes fade-in-scale {
     0% {
       transform: translateX(-100%);
@@ -70,12 +69,6 @@
 @layer base {
     img {
         @apply inline;
-    }
-    .white-1e1d7 {
-        background-color: white;
-    }
-    .black-3c85d {
-        @apply bg-black;
     }
 }
 .white-1e1d7 {

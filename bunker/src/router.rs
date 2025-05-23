@@ -25,7 +25,7 @@ pub struct MainPanelProps {
 pub fn main_panel(props: &MainPanelProps) -> Html {
     let background = html! {
             <>
-                <div class="h-full w-full bg-background "></div>
+                <div class="h-full w-full "></div>
             </>
     };
 

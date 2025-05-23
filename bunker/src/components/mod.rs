@@ -231,7 +231,10 @@ pub fn share_rooky_game(props: &JsChessGameProps) -> Html {
             keypair
                 .sign_note(&mut game_note)
                 .expect("Failed to sign note");
-            let game_entry = rooky_core::idb::RookyGameEntry(game_note.clone());
+            let game_entry = rooky_core::idb::RookyGameEntry {
+                note: game_note.clone(),
+                origin: rooky_core::idb::GameOrigin::Annotated,
+            };
             yew::platform::spawn_local(async move {
                 game_entry
                     .save_to_store()
@@ -275,7 +278,10 @@ pub fn dm_rooky_game(props: &JsChessGameProps) -> Html {
             };
             let mut note = game.clone().into();
             keypair.sign_note(&mut note).expect("Failed to sign note");
-            let note_entry = rooky_core::idb::RookyGameEntry(note);
+            let note_entry = rooky_core::idb::RookyGameEntry {
+                note: note.clone(),
+                origin: rooky_core::idb::GameOrigin::Annotated,
+            };
             yew::platform::spawn_local(async move {
                 note_entry
                     .save_to_store()
@@ -323,7 +329,10 @@ pub fn save_txt_rooky_game(props: &JsChessGameProps) -> Html {
         let id = note.id.take().unwrap();
         Callback::from(move |_| {
             let note = game.clone().into();
-            let note_entry = rooky_core::idb::RookyGameEntry(note);
+            let note_entry = rooky_core::idb::RookyGameEntry {
+                note,
+                origin: rooky_core::idb::GameOrigin::Annotated,
+            };
             yew::platform::spawn_local(async move {
                 note_entry
                     .save_to_store()

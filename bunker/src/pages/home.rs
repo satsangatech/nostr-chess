@@ -6,22 +6,47 @@ use yew::prelude::*;
 pub fn home_page() -> Html {
     html! {
         <>
-            <div class="flex flex-wrap gap-4 p-4">
-                <Card class="w-full">
-                    <CardHeader>
-                        <CardTitle>{"Welcome to Rooky!"}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p>{"This is a simple game database application."}</p>
-                    </CardContent>
-                </Card>
-                <DatabaseSummary />
-                <NostrIdSummary />
+            <div class="relative flex flex-col size-full items-center justify-center text-white gap-8">
+                <div class="text-center space-y-1">
+                    <h2 class="text-7xl font-black mb-4">{"Welcome to your Bunker?!"}</h2>
+                    <p class="text-xl font-bold">{"Your personal chess game database."}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 min-w-3xl">
+                    <DatabaseSummary />
+                    <InboxSummary />
+                    <NostrIdSummary />
+                </div>
             </div>
         </>
     }
 }
 
+#[function_component(InboxSummary)]
+pub fn inbox_summary() -> Html {
+    let db = use_state(|| 0);
+    {
+        let db = db.clone();
+        use_effect_with((), move |_| {
+            let db = db.clone();
+            yew::platform::spawn_local(async move {
+                if let Ok(rooky_db) =
+                    rooky_core::idb::RookyGameEntry::retrieve_all_from_store().await
+                {
+                    db.set(rooky_db.len());
+                }
+            });
+            || {}
+        });
+    }
+
+    html! {
+        <div class="relative bg-white rounded-[2vw] px-12 py-2 h-36 text-black flex flex-col justify-center">
+            <p class="text-6xl font-bold">{format!("{}", *db)}</p>
+            <p class="text-lg">{"Games in Inbox"}</p>
+            <div class="absolute -left-1 top-1/2 bg-purple-500 rounded-[1vw] h-24 w-4 -translate-y-12"></div>
+        </div>
+    }
+}
 #[function_component(DatabaseSummary)]
 pub fn database_summary() -> Html {
     let db = use_state(|| 0);
@@ -41,14 +66,11 @@ pub fn database_summary() -> Html {
     }
 
     html! {
-        <Card class="w-full">
-            <CardHeader>
-                <CardTitle>{"Database Summary"}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>{format!("Total games in database: {}", *db)}</p>
-            </CardContent>
-        </Card>
+        <div class="relative bg-white rounded-[2vw] px-12 py-2 h-36 text-black flex flex-col justify-center">
+            <p class="text-6xl font-bold">{format!("{}", *db)}</p>
+            <p class="text-lg">{"Total games in database"}</p>
+            <div class="absolute -left-1 top-1/2 bg-orange-500 rounded-[1vw] h-24 w-4 -translate-y-12"></div>
+        </div>
     }
 }
 
@@ -56,7 +78,7 @@ pub fn database_summary() -> Html {
 pub fn nostr_id_summary() -> Html {
     let Some(keypair) = nostr_minions::key_manager::use_nostr_key() else {
         return html! {
-            <Card class="w-full">
+            <Card class="bg-black border-white">
                 <CardHeader>
                     <CardTitle>{"Nostr ID Summary"}</CardTitle>
                 </CardHeader>
@@ -67,7 +89,7 @@ pub fn nostr_id_summary() -> Html {
         };
     };
     html! {
-        <Card class="w-full">
+        <Card class="col-span-2 bg-black border-white text-white">
             <CardHeader>
                 <CardTitle>{"Nostr ID Summary"}</CardTitle>
             </CardHeader>

@@ -10,11 +10,99 @@ use yew::prelude::*;
 
 #[function_component(SearchPage)]
 pub fn search_page() -> Html {
+    let selected = use_state(|| None);
+    let inner_html = match *selected {
+        Some(SearchType::Lichess) => html! { <LichessSearchForm /> },
+        Some(SearchType::ChessCom) => html! { <ChessComSearchForm /> },
+        None => html! { <SearchPicker selected={selected.clone()} /> },
+    };
+    let close_search = {
+        let selected = selected.clone();
+        Callback::from(move |_| {
+            selected.set(None);
+        })
+    };
+    let close_button = if selected.is_some() {
+        html! {
+            <Button
+                r#type={ButtonType::Button}
+                class="absolute top-4 right-4"
+                onclick={close_search}
+            >
+                <lucide_yew::CircleX class="size-4" />
+            </Button>
+        }
+    } else {
+        html! {}
+    };
     html! {
-        <div class="flex-1 p-4 overflow-y-auto h-full flex gap-8">
-            <LichessSearchForm />
-            <ChessComSearchForm />
+        <div class="relative flex-1 p-4 overflow-y-auto h-full flex gap-8 flex justify-center items-center">
+            {inner_html}
+            {close_button}
         </div>
+    }
+}
+
+#[derive(Copy, Clone, PartialEq)]
+enum SearchType {
+    Lichess,
+    ChessCom,
+}
+
+#[derive(Properties, PartialEq)]
+struct SearchPickerProps {
+    pub selected: UseStateHandle<Option<SearchType>>,
+}
+
+#[function_component(SearchPicker)]
+fn search_picker(props: &SearchPickerProps) -> Html {
+    let selected = props.selected.clone();
+    html! {
+        <Card class="size-fit max-w-3xl mx-auto">
+            <CardHeader>
+              <CardTitle>{"Searching for games?"}</CardTitle>
+              <CardDescription>{"Query your favourite sites and find games to save in your app."}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <h3 class="text-lg font-semibold">{"What site would you like to query?"}</h3>
+                <div class="flex flex-col gap-4">
+                    <Button
+                        r#type={ButtonType::Button}
+                        variant={ButtonVariant::Outline}
+                        class="w-full"
+                        onclick={
+                            let selected = selected.clone();
+                            Callback::from(move |_| {
+                                selected.set(Some(SearchType::Lichess));
+                            })
+                        }
+                    >
+                        <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/4/47/Lichess_logo_2019.png"
+                            alt="Lichess Logo"
+                            class="size-6 mr-2" />
+                        {"Lichess"}
+                    </Button>
+                    <Button
+                        r#type={ButtonType::Button}
+                        variant={ButtonVariant::Outline}
+                        class="w-full"
+                        onclick={
+                            let selected = selected.clone();
+                            Callback::from(move |_| {
+                                selected.set(Some(SearchType::ChessCom));
+                            })
+                        }
+                    >
+                        <img
+                            src="https://images.chesscomfiles.com/uploads/v1/images_users/tiny_mce/PedroPinhata/phpkXK09k.png"
+                            alt="Chess.com Logo"
+                            class="size-6 mr-2 object-contain" />
+                        {"Chess.com"}
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
     }
 }
 

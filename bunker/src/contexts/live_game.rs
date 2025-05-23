@@ -140,7 +140,10 @@ pub fn key_handler(props: &AnnotatedGameHistoryChildren) -> Html {
                     if let Ok(dm_note) = user_id.extract_rumor(note) {
                         if let Ok(_pgn_game) = rooky_core::RookyGame::try_from(dm_note.clone()) {
                             web_sys::console::log_1(&"PGN Game".into());
-                            let entry = rooky_core::idb::RookyGameEntry(dm_note);
+                            let entry = rooky_core::idb::RookyGameEntry {
+                                note: dm_note,
+                                origin: rooky_core::idb::GameOrigin::Received,
+                            };
                             yew::platform::spawn_local(async move {
                                 if entry.clone().save_to_store().await.is_ok() {
                                     web_sys::console::log_1(&"Saved".into());

@@ -57,41 +57,68 @@ fn app() -> Html {
                 <nostr_minions::relay_pool::NostrRelayPoolProvider relays={(*relays).clone()}>
                     <LoginCheck>
                         <bunker::live_game::AnnotatedGameHistoryProvider>
-
-                        <div class={classes!("h-screen", "w-full", "flex")}>
-                            <navbar class={classes!("min-w-fit", "bg-primary", "text-primary-foreground")}>
-                                <div class={classes!("flex", "flex-col", "items-center", "gap-8", "p-4", "mx-4")}>
-                                <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::Home}>
-                                    <lucide_yew::House class={classes!("size-10")} />
-                                </yew_router::components::Link<bunker::MainRoute>>
-                                <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::NewGame}>
-                                    <lucide_yew::Plus class={classes!("size-10")} />
-                                </yew_router::components::Link<bunker::MainRoute>>
-                                <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::MyGames}>
-                                    <lucide_yew::BookOpen class={classes!("size-10")} />
-                                </yew_router::components::Link<bunker::MainRoute>>
-                                <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::Search}>
-                                    <lucide_yew::Search class={classes!("size-10")} />
-                                </yew_router::components::Link<bunker::MainRoute>>
-                                <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::Settings}>
-                                    <lucide_yew::Cog class={classes!("size-10")} />
-                                </yew_router::components::Link<bunker::MainRoute>>
-                                </div>
-                            </navbar>
-                            <div class={classes!("flex-1", "flex", "flex-col")}>
+                            <div class={classes!("h-screen", "w-full", "flex")}>
+                                <Navbar />
                                 <main class={classes!("flex-1")}>
                                     <bunker::MainPages />
                                 </main>
-                                <footer class={classes!("min-h-12", "bg-secondary")}>
-                                </footer>
                             </div>
-                        </div>
                         </bunker::live_game::AnnotatedGameHistoryProvider>
-
                     </LoginCheck>
                 </nostr_minions::relay_pool::NostrRelayPoolProvider>
             </nostr_minions::key_manager::NostrIdProvider>
         </yew_router::BrowserRouter>
+    }
+}
+
+#[function_component(Navbar)]
+fn navbar() -> Html {
+    let navbar_button_class = classes!(
+        "size-32",
+        "flex",
+        "items-center",
+        "justify-center",
+        "p-4",
+        "bg-zinc-800",
+        "rounded-r-[2vw]",
+        "text-white",
+        "flex-col",
+        "gap-1"
+    );
+    html! {
+        <navbar class={classes!("min-w-fit", "h-full", "flex", "flex-col", "justify-evenly")}>
+            <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::Home}>
+                <div class={navbar_button_class.clone()}>
+                    <img src="/public/img/splashscreen.svg"
+                         class={classes!("size-12", "rounded-full")} />
+                    <span class={classes!("")}>{"Home"}</span>
+                </div>
+            </yew_router::components::Link<bunker::MainRoute>>
+            <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::NewGame}>
+                <div class={navbar_button_class.clone()}>
+                    <lucide_yew::Plus class={classes!("size-12")} />
+                    <span class={classes!("")}>{"Annotate"}</span>
+                </div>
+            </yew_router::components::Link<bunker::MainRoute>>
+            <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::MyGames}>
+                <div class={navbar_button_class.clone()}>
+                    <lucide_yew::BookOpen class={classes!("size-12")} />
+                    <span class={classes!("")}>{"Repertoire"}</span>
+                </div>
+            </yew_router::components::Link<bunker::MainRoute>>
+            <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::Search}>
+                <div class={navbar_button_class.clone()}>
+                    <lucide_yew::Search class={classes!("size-12")} />
+                    <span class={classes!("")}>{"Search"}</span>
+                </div>
+            </yew_router::components::Link<bunker::MainRoute>>
+            <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::Settings}>
+                <div class={navbar_button_class.clone()}>
+                    <lucide_yew::Cog class={classes!("size-12")} />
+                    <span class={classes!("")}>{"Settings"}</span>
+                </div>
+            </yew_router::components::Link<bunker::MainRoute>>
+        </navbar>
     }
 }
 

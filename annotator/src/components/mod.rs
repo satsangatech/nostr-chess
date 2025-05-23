@@ -29,7 +29,10 @@ pub fn share_rooky_game(props: &RookyGameProps) -> Html {
             keypair
                 .sign_note(&mut game_note)
                 .expect("Failed to sign note");
-            let game_entry = rooky_core::idb::RookyGameEntry(game_note.clone());
+            let game_entry = rooky_core::idb::RookyGameEntry {
+                note: game_note.clone(),
+                origin: rooky_core::idb::GameOrigin::Annotated,
+            };
             yew::platform::spawn_local(async move {
                 game_entry
                     .save_to_store()
@@ -70,8 +73,11 @@ pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
                 web_sys::console::log_1(&"Recipient not found".into());
                 return;
             };
-            let note = game.clone().into();
-            let note_entry = rooky_core::idb::RookyGameEntry(note);
+            let note: nostr_minions::nostro2::note::NostrNote = game.clone().into();
+            let note_entry = rooky_core::idb::RookyGameEntry {
+                note: note.clone(),
+                origin: rooky_core::idb::GameOrigin::Annotated,
+            };
             yew::platform::spawn_local(async move {
                 note_entry
                     .save_to_store()
@@ -119,8 +125,11 @@ pub fn save_txt_rooky_game(props: &RookyGameProps) -> Html {
         let game = game.clone();
         let id = note.id.take().unwrap();
         Callback::from(move |_| {
-            let note = game.clone().into();
-            let note_entry = rooky_core::idb::RookyGameEntry(note);
+            let note: nostr_minions::nostro2::note::NostrNote = game.clone().into();
+            let note_entry = rooky_core::idb::RookyGameEntry {
+                note: note.clone(),
+                origin: rooky_core::idb::GameOrigin::Annotated,
+            };
             yew::platform::spawn_local(async move {
                 note_entry
                     .save_to_store()

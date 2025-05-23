@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
 use shady_minions::ui::{
-    Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Form, Input, Popover,
-    PopoverContent, PopoverTrigger,
+    Button, Card, CardContent, CardHeader, CardTitle, Form, Input, Modal, Popover, PopoverContent,
+    PopoverTrigger,
 };
 use shakmaty::Position;
 use web_sys::wasm_bindgen::JsCast;
@@ -146,26 +146,30 @@ pub fn js_chess_game() -> Html {
     }
 
     html! {
-        <div class="container mx-auto px-4 py-6 flex flex-col lg:flex-row gap-8 h-full">
-            <div class="flex-1 flex justify-center items-start">
-                <div ref={board_ref} id="game" class="w-full max-w-[42rem] aspect-square" />
-            </div>
-            <div class="flex flex-col gap-6">
-                <GameCard pgn_game={pgn_game.borrow().clone()}  />
-                <div class="flex flex-row gap-3">
-                    <GameForm
-                        pgn_game={pgn_game.clone()}
-                        on_update={force_update_cb}
-                    />
-                    <ShareRookyGameCard
-                        game={pgn_game.borrow().clone()}
-                    />
+        <div class="pl-12 h-full flex flex-col justify-evenly">
+            <h2 class="text-4xl text-white font-black">{"New Game"}</h2>
+            <div class="flex justify-evenly gap-6">
+                <Card class="h-full bg-zinc-800 min-w-sm max-w-sm">
+                    <CardHeader>
+                        <CardTitle class="mb-8">
+                            <div class="flex justify-between items-top">
+                                <h3 class="text-2xl font-bold text-white">
+                                    {"Game Info"}
+                                </h3>
+                                <GameDetailsModal  pgn_game={pgn_game.clone()} on_update={force_update_cb.clone()} />
+                            </div>
+                        </CardTitle>
+                    </CardHeader>
+                    <GameCard pgn_game={pgn_game.borrow().clone()}  />
+                </Card>
+                <div class="flex-1 flex justify-center items-start">
+                    <div ref={board_ref} id="game" class="w-full max-w-[42rem] aspect-square" />
                 </div>
             </div>
         </div>
     }
 }
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Clone)]
 pub struct GameFormProps {
     pub pgn_game: std::rc::Rc<std::cell::RefCell<rooky_core::RookyGame>>,
     pub on_update: Callback<()>,
@@ -306,58 +310,52 @@ pub fn game_card(props: &GameCardProps) -> Html {
 
     // Check if it's a casual game
     let is_casual_game = event == &rooky_core::pgn_standards::PgnEvent::Casual;
-
-    // Handle empty player names
-    let white_display = if white.is_empty() { "Anonymous" } else { white };
-    let black_display = if black.is_empty() { "Anonymous" } else { black };
-
-    // Create a title for the game
-    let game_title = format!("{} vs {}", white_display, black_display);
+    let white_name = if white.is_empty() {
+        "White".to_string()
+    } else {
+        white.clone()
+    };
+    let black_name = if black.is_empty() {
+        "Black".to_string()
+    } else {
+        black.clone()
+    };
 
     html! {
-        <Card class="size-fit">
-            <CardHeader>
-                <CardTitle>
-                    { game_title }
-                </CardTitle>
-                <CardDescription>
-                    { format!("Event: {}", event) }
-                    <br />
-
-                    // Only show site and round if not a casual game
-                    {
-                        if !is_casual_game  {
-                            html! {
-                                <>
-                                    { format!("Site: {}", site) }
-                                    <br />
-                                </>
-                            }
-                        } else {
-                            html! {}
-                        }
-                    }
-
-                    {
-                        if !is_casual_game  {
-                            html! {
-                                <>
-                                    { format!("Round: {}", round) }
-                                    <br />
-                                </>
-                            }
-                        } else {
-                            html! {}
-                        }
-                    }
-
-                    { format!("Date: {}", date) }
-                    <br />
-                    { format!("Result: {}", outcome) }
-                </CardDescription>
-            </CardHeader>
             <CardContent>
-                <div class="text-sm text-gray-500 flex flex-wrap gap-1">
+                <div class="w-full space-y-2">
+                    <h3 class="text-lg font-bold text-white">
+                        { format!("{white_name} vs {black_name}") }
+                    </h3>
+                    <div class="flex justify-between text-white">
+                        <span class="text-sm font-bold">{ "Date" }</span>
+                        <span class="text-sm">{ date.format("%Y-%m-%d").to_string() }</span>
+                    </div>
+                    <div class="flex justify-between text-white">
+                        <span class="text-sm font-bold">{ "Result" }</span>
+                        <span class="text-sm">{ outcome.to_string() }</span>
+                    </div>
+                    <div class="flex justify-between text-white">
+                        <span class="text-sm font-bold">{ "Event" }</span>
+                        <span class="text-sm">{ event.to_string() }</span>
+                    </div>
+                    {if !is_casual_game {
+                        html! {
+                            <>
+                            <div class="flex justify-between text-white">
+                                <span class="text-sm font-bold">{ "Site" }</span>
+                                <span class="text-sm">{ site.to_string() }</span>
+                            </div>
+                            <div class="flex justify-between text-white">
+                                <span class="text-sm font-bold">{ "Round" }</span>
+                                <span class="text-sm">{ round.to_string() }</span>
+                            </div>
+                            </>
+                        }
+                    } else { html! {}}}
+                </div>
+                <div id="separator" class="h-[0.5px] bg-zinc-600 my-12" />
+                <div class="text-sm text-white flex flex-wrap gap-1">
                     {
                         moves.iter().enumerate().map(|(i, move_text)| {
                             let turn = i / 2;
@@ -379,7 +377,50 @@ pub fn game_card(props: &GameCardProps) -> Html {
                         }).collect::<Html>()
                     }
                 </div>
+                <div id="separator" class="h-[0.5px] bg-zinc-600 my-12" />
+                <ShareGameModal pgn_game={props.pgn_game.clone()} />
             </CardContent>
-        </Card>
+    }
+}
+#[function_component(GameDetailsModal)]
+pub fn game_details_modal(props: &GameFormProps) -> Html {
+    let is_open = use_state(|| false);
+    html! {
+        <>
+            <Button
+                onclick={
+                    let is_open = is_open.clone();
+                    Callback::from(move |_| {
+                    is_open.set(!&*is_open);
+                })}>
+                <lucide_yew::SquarePen class="size-8" />
+            </Button>
+            <Modal {is_open}>
+                <GameForm ..props.clone() />
+            </Modal>
+        </>
+    }
+}
+
+#[function_component(ShareGameModal)]
+pub fn share_game_modal(props: &GameCardProps) -> Html {
+    let is_open = use_state(|| false);
+    let game = props.pgn_game.clone();
+    html! {
+        <>
+            <Button
+                class="w-full"
+                r#type={shady_minions::ui::ButtonType::Button}
+                onclick={
+                    let is_open = is_open.clone();
+                    Callback::from(move |_| {
+                    is_open.set(!&*is_open);
+                })}>
+                    <span class="text-sm font-bold text-white">{ "Finish Game" }</span>
+            </Button>
+            <Modal {is_open}>
+                <ShareRookyGameCard  {game} />
+            </Modal>
+        </>
     }
 }

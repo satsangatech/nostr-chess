@@ -43,7 +43,6 @@ pub fn chess_board(props: &ChessBoardJsProps) -> Html {
         class,
         config,
         on_board_created,
-        ..
     } = props.clone();
     let id_ref = id;
 
