@@ -44,6 +44,8 @@ pub struct ButtonProps {
     pub variant: ButtonVariant,
     #[prop_or_default]
     pub size: ButtonSize,
+    #[prop_or_default]
+    pub disabled: bool,
     #[prop_or(Callback::noop())]
     pub onclick: Callback<MouseEvent>,
 }
@@ -107,6 +109,7 @@ pub fn button(props: &ButtonProps) -> Html {
 
     html! {
         <button
+            disabled={props.disabled}
             class={classes}
             type={props.r#type.to_string()}
             onclick={props.onclick.clone()}
