@@ -54,6 +54,18 @@
     --color-ring: var(--ring);
 }
 
+@theme {
+  --animate-loading-bar: fade-in-scale 1s ease-in-out infinite;
+
+  @keyframes fade-in-scale {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(200%);
+    }
+  }
+}
 
 @layer base {
   img {

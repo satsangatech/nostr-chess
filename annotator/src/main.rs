@@ -127,16 +127,28 @@ fn login_check(props: &yew::html::ChildrenProps) -> Html {
         </>
     }
 }
+
 #[function_component(SplashScreen)]
 pub fn splash_screen() -> Html {
     html! {
-        <div class={classes!("size-full", "flex", "flex-col", "gap-2", "justify-center", "items-center", "bg-black")}>
+        <div class={classes!("size-full", "flex", "flex-col", "gap-4", "justify-center", "items-center", "bg-[url(/public/assets/img/splashscreen_bg.png)]", "bg-cover", "bg-no-repeat", "bg-center")}>
             <img
-                src="/public/assets/img/wR.svg"
+                src="/public/assets/img/splashscreen.svg"
                 alt="Rooky Logo"
-                class={classes!("size-20", "object-contain")}
+                class={classes!("size-40", "object-contain")}
             />
-            <h1 class={classes!("text-4xl", "text-white")}>{"Rooky"}</h1>
+            <LoadingBar />
+        </div>
+    }
+}
+
+#[function_component(LoadingBar)]
+pub fn loading_bar() -> Html {
+    html! {
+        <div class="w-56 mx-auto h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+                class="h-full w-20 rounded-full animate-loading-bar bg-[#1E06DD]"
+            />
         </div>
     }
 }
