@@ -227,7 +227,7 @@ pub fn share_rooky_game(props: &JsChessGameProps) -> Html {
         let game = props.game.clone();
         let relay_ctx = relay_ctx.clone();
         Callback::from(move |_| {
-            let mut game_note: nostr_minions::nostro2::note::NostrNote = game.clone().into();
+            let mut game_note: nostr_minions::nostro2::NostrNote = game.clone().into();
             keypair
                 .sign_note(&mut game_note)
                 .expect("Failed to sign note");
@@ -322,7 +322,7 @@ pub fn dm_rooky_game(props: &JsChessGameProps) -> Html {
 #[function_component(SaveTxtRookyGame)]
 pub fn save_txt_rooky_game(props: &JsChessGameProps) -> Html {
     let game = props.game.clone();
-    let mut note: nostr_minions::nostro2::note::NostrNote = game.clone().into();
+    let mut note: nostr_minions::nostro2::NostrNote = game.clone().into();
     note.serialize_id().expect("Failed to serialize ID");
     let onclick = {
         let game = game.clone();

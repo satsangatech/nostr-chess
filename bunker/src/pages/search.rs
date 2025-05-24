@@ -126,7 +126,7 @@ pub fn external_search_form() -> Html {
                     };
                     while let Some(game) = resp.next().await {
                         web_sys::console::log_1(&format!("{:?}", game).into());
-                        let mut new_note: nostr_minions::nostro2::note::NostrNote = game.into();
+                        let mut new_note: nostr_minions::nostro2::NostrNote = game.into();
                         key_ctx
                             .sign_note(&mut new_note)
                             .expect("Failed to sign note");
@@ -414,7 +414,7 @@ pub fn external_search_form() -> Html {
                         return;
                     };
                     while let Some(game) = resp.next().await {
-                        let mut new_note: nostr_minions::nostro2::note::NostrNote = game.into();
+                        let mut new_note: nostr_minions::nostro2::NostrNote = game.into();
                         keypair
                             .sign_note(&mut new_note)
                             .expect("Failed to sign note");

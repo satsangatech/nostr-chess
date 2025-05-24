@@ -54,14 +54,14 @@ pub struct RookyGame {
     pub outcome: shakmaty::Outcome,
     pub moves: Vec<shakmaty::san::SanPlus>,
 }
-impl TryFrom<nostr_minions::nostro2::note::NostrNote> for RookyGame {
+impl TryFrom<nostr_minions::nostro2::NostrNote> for RookyGame {
     type Error = crate::errors::ChessError;
 
-    fn try_from(value: nostr_minions::nostro2::note::NostrNote) -> Result<Self, Self::Error> {
+    fn try_from(value: nostr_minions::nostro2::NostrNote) -> Result<Self, Self::Error> {
         Self::try_from(value.content.as_bytes())
     }
 }
-impl From<RookyGame> for nostr_minions::nostro2::note::NostrNote {
+impl From<RookyGame> for nostr_minions::nostro2::NostrNote {
     fn from(game: RookyGame) -> Self {
         Self {
             content: game.to_pgn(),

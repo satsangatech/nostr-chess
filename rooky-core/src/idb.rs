@@ -9,7 +9,7 @@ pub enum GameOrigin {
 #[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
 pub struct RookyGameEntry {
     #[serde(flatten)]
-    pub note: nostr_minions::nostro2::note::NostrNote,
+    pub note: nostr_minions::nostro2::NostrNote,
     pub origin: GameOrigin,
 }
 
@@ -28,9 +28,9 @@ impl From<RookyGameEntry> for web_sys::wasm_bindgen::JsValue {
         serde_wasm_bindgen::to_value(&entry.note).unwrap_or(Self::NULL)
     }
 }
-impl TryFrom<nostr_minions::nostro2::note::NostrNote> for RookyGameEntry {
+impl TryFrom<nostr_minions::nostro2::NostrNote> for RookyGameEntry {
     type Error = Box<dyn std::error::Error>;
-    fn try_from(note: nostr_minions::nostro2::note::NostrNote) -> Result<Self, Self::Error> {
+    fn try_from(note: nostr_minions::nostro2::NostrNote) -> Result<Self, Self::Error> {
         note.content.parse::<crate::RookyGame>()?;
         Ok(Self {
             note,
@@ -41,7 +41,7 @@ impl TryFrom<nostr_minions::nostro2::note::NostrNote> for RookyGameEntry {
 impl TryFrom<web_sys::wasm_bindgen::JsValue> for RookyGameEntry {
     type Error = web_sys::wasm_bindgen::JsValue;
     fn try_from(value: web_sys::wasm_bindgen::JsValue) -> Result<Self, Self::Error> {
-        let note: nostr_minions::nostro2::note::NostrNote = serde_wasm_bindgen::from_value(value)?;
+        let note: nostr_minions::nostro2::NostrNote = serde_wasm_bindgen::from_value(value)?;
         note.try_into()
             .map_err(|e| web_sys::wasm_bindgen::JsValue::from_str(&format!("{e:?}")))
     }

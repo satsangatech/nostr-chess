@@ -98,13 +98,13 @@ pub fn key_handler(props: &AnnotatedGameHistoryChildren) -> Html {
                 user_id.as_ref().map(|u| u.public_key()),
                 last_sync.map(|t| t as u64),
             ) {
-                let mut inbox_filter = nostr_minions::nostro2::subscriptions::NostrSubscription {
+                let mut inbox_filter = nostr_minions::nostro2::NostrSubscription {
                     kinds: vec![1059].into(),
                     since: Some(last_sync / 1000),
                     ..Default::default()
                 };
                 inbox_filter.add_tag("#p", &pubkey);
-                if let nostr_minions::nostro2::relay_events::NostrClientEvent::Subscribe(_, id, _) =
+                if let nostr_minions::nostro2::NostrClientEvent::Subscribe(_, id, _) =
                     relay_ctx.send(inbox_filter)
                 {
                     web_sys::console::log_1(&format!("Subscribing to inbox {}", id).into());
@@ -118,10 +118,8 @@ pub fn key_handler(props: &AnnotatedGameHistoryChildren) -> Html {
         let dispatcher = ctx.dispatcher();
         let set_id = sub_id.clone();
         use_effect_with(relay_ctx.relay_events.clone(), move |notes| {
-            if let Some(nostr_minions::nostro2::relay_events::NostrRelayEvent::EndOfSubscription(
-                _,
-                sub_id,
-            )) = notes.last()
+            if let Some(nostr_minions::nostro2::NostrRelayEvent::EndOfSubscription(_, sub_id)) =
+                notes.last()
             {
                 if Some(sub_id) == set_id.as_ref() {
                     web_sys::console::log_1(&"Synced".into());
@@ -137,7 +135,7 @@ pub fn key_handler(props: &AnnotatedGameHistoryChildren) -> Html {
             if let Some(note) = notes.last().cloned() {
                 web_sys::console::log_1(&"Note".into());
                 if let Some(user_id) = user_id.as_ref() {
-                    if let Ok(dm_note) = user_id.extract_rumor(note) {
+                    if let Ok(dm_note) = user_id.extract_rumor(&note) {
                         if let Ok(_pgn_game) = rooky_core::RookyGame::try_from(dm_note.clone()) {
                             web_sys::console::log_1(&"PGN Game".into());
                             let entry = rooky_core::idb::RookyGameEntry {
