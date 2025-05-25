@@ -36,7 +36,7 @@ fn app() -> Html {
     });
     {
         let relays = relays.clone();
-        use_effect_with((), move |_| {
+        use_effect_with((), move |()| {
             yew::platform::spawn_local(async move {
                 let Ok(saved_relays) =
                     nostr_minions::relay_pool::UserRelay::retrieve_all_from_store().await
@@ -54,17 +54,19 @@ fn app() -> Html {
         <yew_router::BrowserRouter>
         <nostr_minions::key_manager::NostrIdProvider>
             <nostr_minions::relay_pool::NostrRelayPoolProvider relays={(*relays).clone()}>
+                <annotator::user_metadata::UserMetadataProvider>
                 <annotator::language::LanguageConfigsProvider>
                 <annotator::configs::AnnotatorConfigProvider>
-                    <div class={classes!("h-dvh", "w-dvw")}>
-                        <LoginCheck>
+                <div class={classes!("h-dvh", "w-dvw")}>
+                <LoginCheck>
                         <annotator::live_game::AnnotatedGameProvider>
                             <annotator::AnnotatorRouter />
                         </annotator::live_game::AnnotatedGameProvider>
-                        </LoginCheck>
-                    </div>
-                    </annotator::configs::AnnotatorConfigProvider>
+                </LoginCheck>
+                </div>
+                </annotator::configs::AnnotatorConfigProvider>
                 </annotator::language::LanguageConfigsProvider>
+                </annotator::user_metadata::UserMetadataProvider>
             </nostr_minions::relay_pool::NostrRelayPoolProvider>
         </nostr_minions::key_manager::NostrIdProvider>
         </yew_router::BrowserRouter>
@@ -112,9 +114,9 @@ fn login_check(props: &yew::html::ChildrenProps) -> Html {
         hidden.clone()
     },);
     let children_class = classes!(if loaded && nostr_id.is_some() {
-        visible.clone()
+        visible
     } else {
-        hidden.clone()
+        hidden
     },);
     // web_sys::console::log_1(
     //     &format!("Loaded: {}, Nostr ID: {:?}", loaded, nostr_id.is_some()).into(),
@@ -179,7 +181,7 @@ fn nostr_id_status() -> Html {
         use_context::<nostr_minions::key_manager::NostrIdStore>().expect("missing nostr context");
     let nostr_id = nostr_ctx.get_pubkey();
     let has_pk = nostr_id.is_some();
-    use_effect_with(nostr_ctx.clone(), move |nostr| {
+    use_effect_with(nostr_ctx, move |nostr| {
         if !has_pk {
             let nostr = nostr.clone();
             yew::platform::spawn_local(async move {
@@ -205,15 +207,11 @@ fn nostr_id_status() -> Html {
     });
     html! {
         <div class={classes!("flex", "gap-2", "justify-between", "items-center")}>
-            {nostr_id.map(|id| {
-                html! {
-                    <p>{format!("Nostr ID: {}", id)}</p>
-                }
-            }).unwrap_or_else(|| {
-                html! {
+            {nostr_id.map_or_else(|| html! {
                     <p>{"No Nostr ID found"}</p>
-                }
-            })}
+                }, |id| html! {
+                    <p>{format!("Nostr ID: {}", id)}</p>
+                })}
         </div>
     }
 }
@@ -224,13 +222,13 @@ fn relay_pool_status() -> Html {
         .expect("missing relay context");
     let relay_status_state = use_state(Vec::new);
     let relay_set = relay_status_state.setter();
-    use_effect_with(relay_ctx.clone(), move |relay| {
+    use_effect_with(relay_ctx, move |relay| {
         let relay = relay.clone();
         yew::platform::spawn_local(async move {
             loop {
                 gloo::timers::future::sleep(std::time::Duration::from_secs(1)).await;
                 let status = relay.relay_health();
-                relay_set.set(status.values().cloned().collect());
+                relay_set.set(status.values().copied().collect());
             }
         });
         || {}
@@ -249,10 +247,7 @@ fn relay_pool_status() -> Html {
 #[function_component(SettingsDrawer)]
 fn settings_drawer() -> Html {
     let is_open = use_state(|| false);
-    let open_onclick = {
-        let is_open = is_open.clone();
-        Callback::from(move |_| is_open.set(true))
-    };
+    let open_onclick = { Callback::from(move |_| is_open.set(true)) };
 
     html! {
         <>
@@ -355,7 +350,7 @@ fn available_moves_selector(props: &MoveSelectorProps) -> Html {
                         selected_move.set(Some(m.clone()));
                     })
                 };
-                let move_input = format!("{}", mv);
+                let move_input = format!("{mv}");
                 Some(html! {
                     <div {onclick} class="relative h-12">
                       <input
@@ -397,9 +392,10 @@ fn next_move_form() -> Html {
             }
         })
     };
-    let button_classes = match (selected_move.is_some(), selected_piece.is_some()) {
-        (true, true) => classes!("bg-blue-500", "text-white", "p-2", "rounded-md"),
-        _ => classes!("bg-gray-300", "text-gray-500", "p-2", "rounded-md"),
+    let button_classes = if (selected_move.is_some(), selected_piece.is_some()) == (true, true) {
+        classes!("bg-blue-500", "text-white", "p-2", "rounded-md")
+    } else {
+        classes!("bg-gray-300", "text-gray-500", "p-2", "rounded-md")
     };
     html! {
         <form {onsubmit} class={classes!("flex", "flex-col", "gap-2","h-full")}>

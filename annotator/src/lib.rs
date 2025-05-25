@@ -7,11 +7,13 @@
 #![allow(clippy::future_not_send, clippy::missing_docs_in_private_items)]
 
 mod components;
-mod contexts;
+pub mod contexts;
+mod models;
 mod pages;
 mod router;
 
 pub use components::*;
 pub use contexts::*;
+pub use models::*;
 pub use pages::*;
 pub use router::*;

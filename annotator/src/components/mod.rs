@@ -1,5 +1,10 @@
 mod expert;
 pub mod modal;
+pub mod user_profile_card_standalone;
+
+// Re-export the UserProfileCard component
+pub use user_profile_card_standalone::UserProfileCard;
+
 mod rookie;
 pub use rookie::RookieAnnotation;
 use yew::prelude::*;

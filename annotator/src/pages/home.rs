@@ -1,3 +1,4 @@
+use crate::components::UserProfileCard;
 use crate::router::AnnotatorRoute;
 use shady_minions::ui::{
     Button, Card, CardContent, CardHeader, CardTitle, Input, InputType, LeftDrawer, Modal, Switch,
@@ -83,6 +84,9 @@ pub fn settings_drawer() -> Html {
             <LeftDrawer {is_open} >
                 <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{language_ctx.t("common_settings")}</h3>
                 <div class="space-y-4 w-full">
+                    // User profile card section
+                    <UserProfileCard />
+
                     <div class="rounded-lg bg-slate-50 p-3 sm:p-4 shadow-sm">
                         <div class="mb-1.5 sm:mb-2">
                             <label class="text-sm sm:text-base font-medium block mb-0.5 sm:mb-1">
