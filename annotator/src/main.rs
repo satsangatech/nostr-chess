@@ -37,6 +37,7 @@ fn app() -> Html {
     {
         let relays = relays.clone();
         use_effect_with((), move |()| {
+            nostr_minions::init_nostr_db().unwrap();
             yew::platform::spawn_local(async move {
                 let Ok(saved_relays) =
                     nostr_minions::relay_pool::UserRelay::retrieve_all_from_store().await

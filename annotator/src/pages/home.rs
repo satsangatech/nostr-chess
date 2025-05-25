@@ -1,9 +1,10 @@
 use crate::components::UserProfileCard;
 use crate::router::AnnotatorRoute;
 use shady_minions::ui::{
-    Button, Card, CardContent, CardHeader, CardTitle, Input, InputType, LeftDrawer, Modal, Switch,
-    Tabs, TabsContent, TabsList, TabsTrigger,
+    Button, Card, CardContent, CardHeader, CardTitle, Input, InputType, LeftDrawer, Switch, Tabs,
+    TabsContent, TabsList, TabsTrigger,
 };
+use wasm_bindgen::JsCast;
 use web_sys::MouseEvent;
 use yew::prelude::*;
 use yew_router::prelude::*;
@@ -62,6 +63,11 @@ pub fn settings_drawer() -> Html {
         Callback::from(move |_: MouseEvent| navigator.push(&AnnotatorRoute::KeySettings))
     };
 
+    let go_to_relay_management = {
+        let navigator = navigator.clone();
+        Callback::from(move |_: MouseEvent| navigator.push(&AnnotatorRoute::RelaySettings))
+    };
+
     let set_experience_level = {
         let config_ctx = config_ctx.clone();
         move |level: crate::contexts::configs::ExperienceLevel| {
@@ -86,6 +92,16 @@ pub fn settings_drawer() -> Html {
                 <div class="space-y-4 w-full">
                     // User profile card section
                     <UserProfileCard />
+                    // Relay Status Section
+                    <div class="rounded-lg bg-slate-50 p-3 sm:p-4 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <lucide_yew::Wifi class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-primary" />
+                                <span class="text-sm sm:text-base font-medium">{"Relay Status"}</span>
+                            </div>
+                            <RelayStatusIcon />
+                        </div>
+                    </div>
 
                     <div class="rounded-lg bg-slate-50 p-3 sm:p-4 shadow-sm">
                         <div class="mb-1.5 sm:mb-2">
@@ -127,6 +143,15 @@ pub fn settings_drawer() -> Html {
                         <lucide_yew::Key class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 flex-shrink-0 text-primary" />
                         <span class="font-medium truncate">{ language_ctx.t("settings_key_recovery") }</span>
                     </Button>
+
+                    <Button
+                        onclick={go_to_relay_management}
+                        class="w-full flex items-center justify-start py-2 px-3 sm:py-3 sm:px-4 h-auto bg-slate-100 border border-slate-200 text-sm sm:text-base shadow-sm break-words"
+                        variant={shady_minions::ui::ButtonVariant::Outline}
+                    >
+                        <lucide_yew::Wifi class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 flex-shrink-0 text-primary" />
+                        <span class="font-medium truncate">{"Relay Management"}</span>
+                    </Button>
                 </div>
             </LeftDrawer>
         </>
@@ -155,37 +180,254 @@ pub fn experience_selector() -> Html {
 pub fn game_details_modal() -> Html {
     let game_ctx = crate::live_game::use_annotated_game();
     let game = game_ctx.pgn_game();
-    let is_open = use_state(|| true);
-    let language_ctx = crate::contexts::language::use_language_ctx();
+
+    // Auto-open modal if this is a new game (both players are unnamed)
+    let should_auto_open = game.white.is_empty() && game.black.is_empty();
+    let is_open = use_state(|| should_auto_open);
+
+    // Auto-close modal when both player names are filled in
+    {
+        let is_open = is_open.clone();
+        let game = game.clone();
+        use_effect_with(
+            (game.white.clone(), game.black.clone()),
+            move |(white, black)| {
+                if !white.is_empty() && !black.is_empty() && *is_open {
+                    // Small delay to let user see the form was submitted
+                    yew::platform::spawn_local(async move {
+                        gloo::timers::future::TimeoutFuture::new(1000).await;
+                        is_open.set(false);
+                    });
+                }
+                || ()
+            },
+        );
+    }
+
     html! {
         <>
             <Button
                 onclick={
                     let is_open = is_open.clone();
                     Callback::from(move |_| {
-                    is_open.set(true);
-                })}>
+                        is_open.set(!*is_open);
+                    })}>
                 <lucide_yew::Cog class="size-4" />
             </Button>
-        <Modal {is_open}>
-            <Card>
-                <CardHeader>
-                    <CardTitle>
-                        { language_ctx.t("common_game_details") }
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div class="flex flex-col">
-                        <p>{ format!("{}: {}", language_ctx.t("game_details_event"), game.event) }</p>
-                        <p>{ format!("{}: {}", language_ctx.t("game_details_site"), game.site) }</p>
-                        <p>{ format!("{}: {}", language_ctx.t("game_details_date"), game.date) }</p>
-                        <p>{ format!("{}: {}", language_ctx.t("game_details_white"), game.white) }</p>
-                        <p>{ format!("{}: {}", language_ctx.t("game_details_black"), game.black) }</p>
-                    </div>
-                </CardContent>
-            </Card>
-        </Modal>
+            {
+                if *is_open {
+                    html! {
+                        <div class="fixed inset-0 z-50 flex items-center justify-center">
+                            <div class="fixed inset-0 bg-black/50" onclick={{
+                                let is_open = is_open.clone();
+                                Callback::from(move |_| is_open.set(false))
+                            }}></div>
+                            <div class="relative z-10 w-full max-w-md mx-4">
+                                <GameDetailsForm game_ctx={game_ctx} />
+                            </div>
+                        </div>
+                    }
+                } else {
+                    html! {}
+                }
+            }
         </>
+    }
+}
+
+#[derive(Properties, PartialEq, Clone)]
+pub struct GameDetailsFormProps {
+    pub game_ctx: crate::live_game::AnnotatedGameStore,
+}
+
+#[function_component(GameDetailsForm)]
+pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
+    let game_ctx = props.game_ctx.clone();
+    let game = game_ctx.pgn_game();
+    let language_ctx = crate::contexts::language::use_language_ctx();
+
+    // State for event selection
+    let event_options = ["Casual", "Tournament", "Match", "Simul", "Other"];
+
+    let current_event = match &game.event {
+        rooky_core::pgn_standards::PgnEvent::Casual => "Casual".to_string(),
+        rooky_core::pgn_standards::PgnEvent::Named(name) => name.clone(),
+        rooky_core::pgn_standards::PgnEvent::Unknown => "Casual".to_string(),
+    };
+
+    let selected_event = use_state(|| current_event.clone());
+    let is_tournament = *selected_event != "Casual";
+
+    html! {
+        <Card class="w-full max-w-md">
+            <CardHeader>
+                <CardTitle>
+                    { language_ctx.t("common_game_details") }
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <shady_minions::ui::Form
+                    class="space-y-4"
+                    onsubmit={{
+                        let game_ctx = game_ctx.clone();
+                        Callback::from(move |form: web_sys::HtmlFormElement| {
+                            let white_input = form.get_with_name("white")
+                                .and_then(|n| n.dyn_into::<web_sys::HtmlInputElement>().ok());
+                            let black_input = form.get_with_name("black")
+                                .and_then(|n| n.dyn_into::<web_sys::HtmlInputElement>().ok());
+                            let date_input = form.get_with_name("date")
+                                .and_then(|n| n.dyn_into::<web_sys::HtmlInputElement>().ok());
+                            let event_input = form.get_with_name("event")
+                                .and_then(|n| n.dyn_into::<web_sys::HtmlSelectElement>().ok());
+                            let site_input = form.get_with_name("site")
+                                .and_then(|n| n.dyn_into::<web_sys::HtmlInputElement>().ok());
+                            let round_input = form.get_with_name("round")
+                                .and_then(|n| n.dyn_into::<web_sys::HtmlInputElement>().ok());
+
+                            if let Some(white) = white_input {
+                                let white_value = white.value();
+                                if !white_value.is_empty() {
+                                    game_ctx.dispatch(crate::live_game::AnnotatedGameAction::AddWhiteName(white_value));
+                                }
+                            }
+                            if let Some(black) = black_input {
+                                let black_value = black.value();
+                                if !black_value.is_empty() {
+                                    game_ctx.dispatch(crate::live_game::AnnotatedGameAction::AddBlackName(black_value));
+                                }
+                            }
+                            if let Some(date) = date_input {
+                                if let Ok(parsed_date) = chrono::NaiveDate::parse_from_str(&date.value(), "%Y-%m-%d") {
+                                    game_ctx.dispatch(crate::live_game::AnnotatedGameAction::ChangeDate(parsed_date));
+                                }
+                            }
+                            if let Some(event) = event_input {
+                                let event_value = event.value();
+                                let site_value = site_input.map(|s| s.value()).unwrap_or_default();
+                                let round_value = round_input.map(|r| r.value()).unwrap_or_default();
+
+                                if event_value == "Casual" {
+                                    game_ctx.dispatch(crate::live_game::AnnotatedGameAction::UpdateEventDetails {
+                                        event: "Casual".to_string(),
+                                        site: String::new(),
+                                        round: String::new(),
+                                    });
+                                } else {
+                                    game_ctx.dispatch(crate::live_game::AnnotatedGameAction::UpdateEventDetails {
+                                        event: event_value,
+                                        site: site_value,
+                                        round: round_value,
+                                    });
+                                }
+                            }
+                        })
+                    }}
+                >
+                    // White player name
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_white") }</label>
+                        <Input
+                            name="white"
+                            r#type={shady_minions::ui::InputType::Text}
+                            placeholder={ language_ctx.t("game_details_enter_white_player") }
+                            value={game.white.clone()}
+                            class="w-full"
+                        />
+                    </div>
+
+                    // Black player name
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_black") }</label>
+                        <Input
+                            name="black"
+                            r#type={shady_minions::ui::InputType::Text}
+                            placeholder={ language_ctx.t("game_details_enter_black_player") }
+                            value={game.black.clone()}
+                            class="w-full"
+                        />
+                    </div>
+
+                    // Date
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_date") }</label>
+                        <Input
+                            name="date"
+                            r#type={shady_minions::ui::InputType::Date}
+                            value={game.date.format("%Y-%m-%d").to_string()}
+                            class="w-full"
+                        />
+                    </div>
+
+                    // Event dropdown
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_event") }</label>
+                        <select
+                            name="event"
+                            class="w-full px-3 py-2 border border-input rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                            onchange={{
+                                let selected_event = selected_event.clone();
+                                Callback::from(move |e: Event| {
+                                    let select: web_sys::HtmlSelectElement = e.target_unchecked_into();
+                                    selected_event.set(select.value());
+                                })
+                            }}
+                        >
+                            { for event_options.iter().map(|option| {
+                                html! {
+                                    <option
+                                        value={*option}
+                                        selected={*option == current_event}
+                                    >
+                                        { *option }
+                                    </option>
+                                }
+                            })}
+                        </select>
+                    </div>
+
+                    // Conditional Site and Round fields (only show if not Casual)
+                    if is_tournament {
+                        <>
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_site") }</label>
+                                <Input
+                                    name="site"
+                                    r#type={shady_minions::ui::InputType::Text}
+                                    placeholder={ language_ctx.t("game_details_enter_site") }
+                                    value={match &game.site {
+                                        rooky_core::pgn_standards::PgnSite::Named(name) => name.clone(),
+                                        _ => String::new(),
+                                    }}
+                                    class="w-full"
+                                />
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_round") }</label>
+                                <Input
+                                    name="round"
+                                    r#type={shady_minions::ui::InputType::Text}
+                                    placeholder={ language_ctx.t("game_details_enter_round") }
+                                    value={match &game.round {
+                                        rooky_core::pgn_standards::PgnRound::Named(name) => name.clone(),
+                                        _ => String::new(),
+                                    }}
+                                    class="w-full"
+                                />
+                            </div>
+                        </>
+                    }
+
+                    // Submit button
+                    <shady_minions::ui::Button
+                        r#type={shady_minions::ui::ButtonType::Submit}
+                        class="w-full mt-4"
+                    >
+                        { language_ctx.t("common_save") }
+                    </shady_minions::ui::Button>
+                </shady_minions::ui::Form>
+            </CardContent>
+        </Card>
     }
 }
 
@@ -752,6 +994,69 @@ pub fn annotation_calculator(props: &ExpertAnnotationProps) -> Html {
                 <lucide_yew::Send class="size-12" />
             </Button>
             </div>
+        </div>
+    }
+}
+
+#[function_component(RelayStatusIcon)]
+pub fn relay_status_icon() -> Html {
+    let relay_ctx = use_context::<nostr_minions::relay_pool::NostrRelayPoolStore>()
+        .expect("missing relay context");
+    let relay_status_state = use_state(Vec::new);
+    let relay_set = relay_status_state.setter();
+
+    use_effect_with(relay_ctx.clone(), move |relay| {
+        let relay = relay.clone();
+        yew::platform::spawn_local(async move {
+            loop {
+                gloo::timers::future::sleep(std::time::Duration::from_secs(2)).await;
+                let status = relay.relay_health();
+                relay_set.set(status.values().cloned().collect());
+            }
+        });
+        || {}
+    });
+
+    let open_relays = relay_status_state
+        .iter()
+        .filter(|r| r == &&nostr_minions::relay_pool::ReadyState::OPEN)
+        .count();
+
+    let total_relays = relay_status_state.len();
+    let is_connected = open_relays > 0;
+    let connection_quality = if total_relays == 0 {
+        "unknown"
+    } else if open_relays == 0 {
+        "disconnected"
+    } else if open_relays < total_relays / 2 {
+        "poor"
+    } else if open_relays < total_relays {
+        "good"
+    } else {
+        "excellent"
+    };
+
+    let (icon_color, status_text) = match connection_quality {
+        "excellent" => (
+            "text-green-500",
+            format!("{}/{}", open_relays, total_relays),
+        ),
+        "good" => (
+            "text-yellow-500",
+            format!("{}/{}", open_relays, total_relays),
+        ),
+        "poor" => (
+            "text-orange-500",
+            format!("{}/{}", open_relays, total_relays),
+        ),
+        "disconnected" => ("text-red-500", "Offline".to_string()),
+        _ => ("text-gray-400", "...".to_string()),
+    };
+
+    html! {
+        <div class="flex items-center">
+            <div class={classes!("w-2", "h-2", "rounded-full", "mr-2", if is_connected { "bg-green-500" } else { "bg-red-500" })}></div>
+            <span class={classes!("text-xs", "sm:text-sm", icon_color)}>{status_text}</span>
         </div>
     }
 }
