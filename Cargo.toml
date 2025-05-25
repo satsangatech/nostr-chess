@@ -22,5 +22,5 @@ wasm-bindgen-futures = "0.4.50"
 
 
 # nostr-minions = { path = "../../illuminodes/minions" }
-nostr-minions = "0.1.17"
+nostr-minions = { version = "0.1.17", features = ["uploads", "toastify", "leaflet"] }
 

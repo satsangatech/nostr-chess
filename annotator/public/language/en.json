@@ -121,5 +121,19 @@
   "login_passkey": "Passkey",
   "login_physical_copy": "Keep a physical copy of this phrase in a safe place.",
   "login_save_key": "Save this key in your password manager.",
-  "login_generate_new": "Generate New"
+  "login_generate_new": "Generate New",
+
+  "profile_title": "Nostr Profile",
+  "profile_description": "Your public identity on the Nostr network",
+  "edit_profile": "Edit Profile",
+  "profile_name": "Name",
+  "profile_name_placeholder": "Your display name",
+  "profile_about": "About",
+  "profile_about_placeholder": "A short bio about yourself (optional)",
+  "profile_picture_url": "Profile Picture URL",
+  "profile_picture_url_placeholder": "URL to your profile picture (optional)",
+  "anonymous_user": "Anonymous User",
+  "no_bio": "No bio provided",
+  "common_back": "Back",
+  "profile_updated": "Profile updated successfully"
 }
