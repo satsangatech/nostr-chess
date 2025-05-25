@@ -20,7 +20,7 @@ pub fn annotator_router() -> Html {
             match switch {
                 AnnotatorRoute::Home => html! { <crate::HomePage /> },
                 AnnotatorRoute::KeySettings => html! { <crate::KeyRecoveryPage /> },
-                AnnotatorRoute::RelaySettings => html! { <h1>{ "Relay Settings" }</h1> },
+                AnnotatorRoute::RelaySettings => html! { <crate::RelayManagementPage /> },
                 AnnotatorRoute::Profile => html! { <crate::ProfilePage /> },
             }}}
         />

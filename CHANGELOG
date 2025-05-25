@@ -1,6 +1,11 @@
 # CHANGELOG
 <!-- Latest on top -->
 
+## [1.1.0] - 2025-05-26
+### Added
+- Added a simple status icon and link to the relay management page in the settings drawer, along with functionality to add, remove, and view detailed status of relays.
+- Updated the main screen popup to include a form for editing details such as white and black names, and date input. Added a dropdown to select Site and Round for non-Casual events.
+
 ## [1.1.0] - 2025-05-25
 ### Added
 - Added functionality to retrieve and edit user metadata as per NIP-01, including a simple user card in the settings drawer, navigation to a profile edit page, and an edit metadata form for name and picture.
