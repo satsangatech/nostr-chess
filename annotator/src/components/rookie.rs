@@ -32,15 +32,11 @@ pub fn rookie_annotation() -> Html {
             next_from_square.set(Some(square));
         })
     };
-    if next_role.as_ref().is_none() && next_from_square.as_ref().is_none() {
-        return html! {
-            <PieceSelection {next_role} />
-        };
-    }
 
     let back_option = match (next_role.as_ref(), next_from_square.as_ref()) {
         (Some(_), Some(_)) => html! {
             <shady_minions::ui::Button
+                class="align-self-start"
                 onclick={clear_from_square}>
                 <lucide_yew::ArrowLeft
                     class="size-5" />
@@ -48,12 +44,15 @@ pub fn rookie_annotation() -> Html {
         },
         (Some(_), None) => html! {
             <shady_minions::ui::Button
+                class="align-self-start"
                 onclick={clear_role}>
                 <lucide_yew::ArrowLeft
                     class="size-5" />
             </shady_minions::ui::Button>
         },
-        _ => html! {},
+        _ => html! {
+                <div class="w-2"></div> // Spacer for centering
+        },
     };
     let inner_html = match (next_role.as_ref(), next_from_square.as_ref()) {
         (Some(role), None) => html! {
@@ -65,7 +64,9 @@ pub fn rookie_annotation() -> Html {
                 next_role={next_role.clone()}
                 next_from_square={next_from_square.clone()} />
         },
-        _ => html! {},
+        _ => html! {
+            <PieceSelection next_role={next_role.clone()} />
+        },
     };
 
     let role_html = if let Some(role) = next_role.as_ref() {
@@ -110,7 +111,7 @@ pub fn rookie_annotation() -> Html {
             <div class="w-full flex items-center justify-between">
                 {back_option}
                 <h3 class="text-xl font-semibold">{ language_ctx.t("annotation_select_piece") }</h3>
-                <div class="w-16"></div> // Spacer for centering
+                <div class="w-2"></div> // Spacer for centering
             </div>
 
             // Preview Information Card
@@ -185,30 +186,26 @@ pub fn piece_selection(props: &PieceSelectionProps) -> Html {
         })
     };
 
-    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
-        <div class="flex flex-col p-3 items-center w-full max-w-md mx-auto">
-            <h3 class="mb-4">{ language_ctx.t("annotation_select_piece") }</h3>
-            <div class="grid grid-cols-2 gap-4 w-full">
-                <PieceSelector
-                    piece={shakmaty::Role::Pawn}
-                    onclick={set_role.clone()} />
-                <PieceSelector
-                    piece={shakmaty::Role::Knight}
-                    onclick={set_role.clone()} />
-                <PieceSelector
-                    piece={shakmaty::Role::Bishop}
-                    onclick={set_role.clone()} />
-                <PieceSelector
-                    piece={shakmaty::Role::Rook}
-                    onclick={set_role.clone()} />
-                <PieceSelector
-                    piece={shakmaty::Role::Queen}
-                    onclick={set_role.clone()} />
-                <PieceSelector
-                    piece={shakmaty::Role::King}
-                    onclick={set_role.clone()} />
-            </div>
+        <div class="grid grid-cols-2 gap-4 w-full">
+            <PieceSelector
+                piece={shakmaty::Role::Pawn}
+                onclick={set_role.clone()} />
+            <PieceSelector
+                piece={shakmaty::Role::Knight}
+                onclick={set_role.clone()} />
+            <PieceSelector
+                piece={shakmaty::Role::Bishop}
+                onclick={set_role.clone()} />
+            <PieceSelector
+                piece={shakmaty::Role::Rook}
+                onclick={set_role.clone()} />
+            <PieceSelector
+                piece={shakmaty::Role::Queen}
+                onclick={set_role.clone()} />
+            <PieceSelector
+                piece={shakmaty::Role::King}
+                onclick={set_role.clone()} />
         </div>
     }
 }

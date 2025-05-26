@@ -184,7 +184,7 @@ pub fn game_details_modal() -> Html {
     let game = game_ctx.pgn_game();
 
     // Auto-open modal if this is a new game (both players are unnamed)
-    let should_auto_open = game.white.is_empty() && game.black.is_empty();
+    let should_auto_open = game.white.is_empty() && game.black.is_empty() && game.moves.is_empty();
     let is_open = use_state(|| should_auto_open);
 
     // Auto-close modal when both player names are filled in
