@@ -1,8 +1,8 @@
 use crate::components::UserProfileCard;
 use crate::router::AnnotatorRoute;
 use shady_minions::ui::{
-    Button, Card, CardContent, CardHeader, CardTitle, Input, InputType, LeftDrawer, Switch, Tabs,
-    TabsContent, TabsList, TabsTrigger,
+    Button, Card, CardContent, CardHeader, CardTitle, Input, LeftDrawer, Switch, Tabs, TabsContent,
+    TabsList, TabsTrigger,
 };
 use wasm_bindgen::JsCast;
 use web_sys::MouseEvent;
@@ -17,17 +17,18 @@ pub fn home_page() -> Html {
             <Tabs default_value={config_ctx.experience_level.to_string()}
                 class="flex flex-col size-full bg-muted">
                 <HomeHeader />
-                <div class="container flex-1 p-3 pb-6">
+                <div class="container flex-1 p-3 pb-6 flex flex-col">
                     <MoveList />
+                    <div class="h-[0.5px] bg-gray-600 my-6 min-w-sm rounded-lg  mx-auto" />
                     <TabsContent
-                        class="flex flex-col h-full justify-between"
+                        class="flex flex-col justify-between"
                         value={crate::configs::ExperienceLevel::Rookie.to_string()}>
                         <crate::components::RookieAnnotation />
                     </TabsContent>
                     <TabsContent
-                        class="size-full flex"
+                        class="flex-1 flex flex-col justify-end gap-6"
                         value={crate::configs::ExperienceLevel::Expert.to_string()}>
-                        <ExpertAnnotation />
+                        <crate::components::ExpertAnnotation />
                     </TabsContent>
                 </div>
             </Tabs>
@@ -176,6 +177,7 @@ pub fn experience_selector() -> Html {
     }
 }
 
+use shady_minions::ui::Modal;
 #[function_component(GameDetailsModal)]
 pub fn game_details_modal() -> Html {
     let game_ctx = crate::live_game::use_annotated_game();
@@ -203,34 +205,21 @@ pub fn game_details_modal() -> Html {
             },
         );
     }
+    let close_on_click = {
+        let is_open = is_open.clone();
+        Callback::from(move |_: MouseEvent| {
+            is_open.set(!*is_open);
+        })
+    };
 
     html! {
         <>
-            <Button
-                onclick={
-                    let is_open = is_open.clone();
-                    Callback::from(move |_| {
-                        is_open.set(!*is_open);
-                    })}>
-                <lucide_yew::Cog class="size-4" />
+            <Button onclick={close_on_click}>
+                <lucide_yew::SquarePen class="size-4" />
             </Button>
-            {
-                if *is_open {
-                    html! {
-                        <div class="fixed inset-0 z-50 flex items-center justify-center">
-                            <div class="fixed inset-0 bg-black/50" onclick={{
-                                let is_open = is_open.clone();
-                                Callback::from(move |_| is_open.set(false))
-                            }}></div>
-                            <div class="relative z-10 w-full max-w-md mx-4">
-                                <GameDetailsForm game_ctx={game_ctx} />
-                            </div>
-                        </div>
-                    }
-                } else {
-                    html! {}
-                }
-            }
+            <Modal {is_open}>
+                <GameDetailsForm game_ctx={game_ctx} />
+            </Modal>
         </>
     }
 }
@@ -246,17 +235,11 @@ pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
     let game = game_ctx.pgn_game();
     let language_ctx = crate::contexts::language::use_language_ctx();
 
-    // State for event selection
-    let event_options = ["Casual", "Tournament", "Match", "Simul", "Other"];
-
-    let current_event = match &game.event {
-        rooky_core::pgn_standards::PgnEvent::Casual => "Casual".to_string(),
-        rooky_core::pgn_standards::PgnEvent::Named(name) => name.clone(),
-        rooky_core::pgn_standards::PgnEvent::Unknown => "Casual".to_string(),
-    };
-
-    let selected_event = use_state(|| current_event.clone());
-    let is_tournament = *selected_event != "Casual";
+    let selected_event = use_state(|| game.event.clone());
+    let is_tournament = matches!(
+        *selected_event,
+        rooky_core::pgn_standards::PgnEvent::Named(_)
+    );
 
     html! {
         <Card class="w-full max-w-md">
@@ -358,31 +341,25 @@ pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
                         />
                     </div>
 
-                    // Event dropdown
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_event") }</label>
-                        <select
+                        <Input
                             name="event"
-                            class="w-full px-3 py-2 border border-input rounded-md text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                            onchange={{
+                            value={match &*selected_event {
+                                rooky_core::pgn_standards::PgnEvent::Named(name) => name.clone(),
+                                _ => String::new(),
+                            }}
+                            oninput={{
                                 let selected_event = selected_event.clone();
-                                Callback::from(move |e: Event| {
-                                    let select: web_sys::HtmlSelectElement = e.target_unchecked_into();
-                                    selected_event.set(select.value());
+                                Callback::from(move |e: String| {
+                                    if e.is_empty() {
+                                        selected_event.set(rooky_core::pgn_standards::PgnEvent::Casual);
+                                        return;
+                                    }
+                                    selected_event.set(rooky_core::pgn_standards::PgnEvent::Named(e));
                                 })
                             }}
-                        >
-                            { for event_options.iter().map(|option| {
-                                html! {
-                                    <option
-                                        value={*option}
-                                        selected={*option == current_event}
-                                    >
-                                        { *option }
-                                    </option>
-                                }
-                            })}
-                        </select>
+                        />
                     </div>
 
                     // Conditional Site and Round fields (only show if not Casual)
@@ -488,512 +465,6 @@ pub fn move_list() -> Html {
                     </div>
                 }
             })}
-        </div>
-    }
-}
-
-#[function_component(ExpertAnnotation)]
-pub fn expert_annotation() -> Html {
-    let game_ctx = crate::live_game::use_annotated_game();
-    let next_move = use_state(|| None::<String>);
-    let legal_moves = use_state(|| game_ctx.legal_moves());
-    let last_position = game_ctx.last_game_position();
-    let ready_move = use_state(|| None::<shakmaty::Move>);
-
-    {
-        let legal_moves = legal_moves.clone();
-        let last_position = last_position.clone();
-        use_effect_with(next_move.clone(), move |next| {
-            if let Some(next) = next.as_ref() {
-                let mut new_moves = (*legal_moves).clone();
-                new_moves.retain(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().strip_prefix(next).is_some()
-                });
-                legal_moves.set(new_moves);
-            } else {
-                legal_moves.set(game_ctx.legal_moves());
-            }
-            || {}
-        });
-    }
-
-    {
-        let legal_moves = legal_moves.clone();
-        let ready_move = ready_move.clone();
-        use_effect_with(next_move.clone(), move |next| {
-            if let Some(next) = next.as_ref() {
-                let matching_move = legal_moves
-                    .iter()
-                    .filter_map(|m| {
-                        let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                        san.to_string().strip_prefix(next)?;
-                        Some(m.clone())
-                        //san.to_string().contains(next).then_some(Some(m))
-                    })
-                    .collect::<Vec<_>>();
-                if matching_move.len() == 1 {
-                    let m = matching_move.first().cloned();
-                    ready_move.set(m);
-                }
-            }
-            || {}
-        });
-    }
-
-    let props = ExpertAnnotationProps {
-        next_move,
-        ready_move: ready_move.clone(),
-        legal_moves: legal_moves.clone(),
-    };
-
-    html! {
-        <div class="flex flex-col flex-1 justify-between">
-            <div class="space-y-2">
-                <MoveList />
-                <AnnotationDisplay ..props.clone() />
-            </div>
-            <AnnotationCalculator ..props />
-        </div>
-    }
-}
-
-#[derive(PartialEq, Properties, Clone)]
-pub struct ExpertAnnotationProps {
-    pub next_move: UseStateHandle<Option<String>>,
-    pub legal_moves: UseStateHandle<Vec<shakmaty::Move>>,
-    pub ready_move: UseStateHandle<Option<shakmaty::Move>>,
-}
-
-#[function_component(AnnotationDisplay)]
-pub fn annotation_display(props: &ExpertAnnotationProps) -> Html {
-    let game_ctx = crate::live_game::use_annotated_game();
-    let language_ctx = crate::contexts::language::use_language_ctx();
-    let last_position = game_ctx.last_game_position();
-    let ExpertAnnotationProps {
-        next_move,
-        legal_moves,
-        ready_move: _,
-    } = props;
-    let is_selecting = next_move.is_some();
-
-    // Format legal moves as a string
-    let legal_moves_text = if is_selecting {
-        legal_moves
-            .iter()
-            .enumerate()
-            .fold(String::new(), |acc, (i, m)| {
-                let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                if i == 0 {
-                    format!("{acc}: {san}",)
-                } else {
-                    format!("{acc}, {san}")
-                }
-            })
-    } else {
-        language_ctx.t("annotation_select_piece").to_string()
-    };
-
-    html! {
-        <div class="relative w-full">
-            <Input
-                class={classes!(
-                    "w-full",
-                    "pr-4", // Add padding on the right to prevent text overlap
-                    "pl-4", // Add padding on the left
-                )}
-                disabled={true}
-                value={""} // Keep the actual input value empty
-            />
-
-            <div class="absolute inset-0 flex items-center px-4">
-                // Left side - next move
-                <div class="flex-shrink-0 mr-2">
-                    <span class="text-xl font-medium">
-                        { next_move.as_ref().cloned().unwrap_or_default() }
-                    </span>
-                </div>
-
-                // Right side - legal moves (with truncation)
-                <div class="flex-grow flex justify-end">
-                    <span class="text-xl text-gray-500 truncate max-w-xs">
-                        { legal_moves_text }
-                    </span>
-                </div>
-            </div>
-        </div>
-    }
-}
-
-#[function_component(SanMoveBlocks)]
-pub fn san_move_blocks(props: &ExpertAnnotationProps) -> Html {
-    let game_ctx = crate::live_game::use_annotated_game();
-    let last_position = game_ctx.last_game_position();
-    let ExpertAnnotationProps {
-        next_move: _,
-        legal_moves,
-        ready_move: _,
-    } = props;
-
-    html! {
-        <div class="text-xl font-bold grid grid-cols-3 gap-4">
-            {legal_moves.iter().map(|m| {
-                let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                html! {
-                    <Button
-                        class={classes!(
-                            "p-2",
-                            "rounded",
-                            "aspect-square",
-                            "w-full",
-                            "h-full",
-                            "flex",
-                            "items-center",
-                            "justify-center",
-                            "flex-col"
-                        )}>
-                        <span>{san.to_string()}</span>
-                    </Button>
-                }
-            }).collect::<Html>()}
-        </div>
-    }
-}
-
-#[function_component(AnnotationCalculator)]
-pub fn annotation_calculator(props: &ExpertAnnotationProps) -> Html {
-    let game_ctx = crate::live_game::use_annotated_game();
-    let last_position = game_ctx.last_game_position();
-    let ExpertAnnotationProps {
-        next_move,
-        legal_moves,
-        ready_move,
-    } = props;
-    let onclick = {
-        let next_move = next_move.clone();
-        let legal_moves = legal_moves.clone();
-        let last_position = last_position.clone();
-        Callback::from(move |input_event: String| {
-            if legal_moves.iter().any(|m| {
-                let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                san.to_string().contains(&input_event)
-            }) {
-                let mut new_move = (*next_move).clone().unwrap_or_default();
-                new_move.push_str(&input_event);
-                next_move.set(Some(new_move));
-            }
-        })
-    };
-    let play_move = {
-        let ready_move = ready_move.clone();
-        let next_move = next_move.clone();
-        Callback::from(move |_| {
-            if let Some(m) = ready_move.as_ref() {
-                game_ctx.dispatch(crate::live_game::AnnotatedGameAction::PlayMove(m.clone()));
-            }
-            next_move.set(None);
-            ready_move.set(None);
-        })
-    };
-    let clear = {
-        let next_move = next_move.clone();
-        Callback::from(move |_| {
-            next_move.set(None);
-        })
-    };
-    let input_class = classes!("h-fit", "text-6xl", "font-bold",);
-    html! {
-        <div class="">
-            <div class="grid grid-cols-5">
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("N")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"N"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("B")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"B"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("R")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"R"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("Q")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"Q"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("K")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"K"} />
-            </div>
-            <div class="grid grid-cols-4">
-            <Input
-                class={input_class.clone()}
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("a")})
-                }
-                value={"a"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("b")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"b"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("c")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"c"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("d")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"d"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("e")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"e"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("f")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"f"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("g")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"g"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("h")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"h"} />
-            </div>
-            <div class="grid grid-cols-4">
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("1")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"1"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("2")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"2"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("3")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"3"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("4")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"4"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("5")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"5"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("6")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"6"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("7")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"7"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    !san.to_string().contains("8")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"8"} />
-            </div>
-            <div class="grid grid-cols-5">
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("x")})
-                }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"x"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("+")
-                }) }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"+"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("#")
-                }) }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"#"} />
-            <Input
-                class={input_class.clone()}
-                disabled={
-                    !legal_moves.iter().any(|m| {
-                    let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
-                    san.to_string().contains("O")
-                }) }
-                onclick={onclick.clone()}
-                r#type={InputType::Button}
-                value={"O"} />
-            <Button
-                class={classes!(
-                    "w-full",
-                    "h-full",
-                )}
-                variant={shady_minions::ui::ButtonVariant::Destructive}
-                onclick={clear} >
-                <lucide_yew::Delete class="size-12" />
-            </Button>
-            <Button
-                class={classes!(
-                    "w-full",
-                    "h-full",
-                    if ready_move.is_some() {
-                        ""
-                    } else {
-                        "bg-zinc-400"
-                    },
-                    if ready_move.is_some() {
-                        "cursor-pointer"
-                    } else {
-                        "cursor-not-allowed"
-                    },
-                    if ready_move.is_none() {
-                        "pointer-events-none"
-                    } else {
-                        "pointer-events-auto"
-                    },
-                )}
-                onclick={play_move} >
-                <lucide_yew::Send class="size-12" />
-            </Button>
-            </div>
         </div>
     }
 }

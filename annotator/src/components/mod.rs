@@ -6,6 +6,7 @@ pub mod user_profile_card_standalone;
 pub use user_profile_card_standalone::UserProfileCard;
 
 mod rookie;
+pub use expert::ExpertAnnotation;
 pub use rookie::RookieAnnotation;
 use yew::prelude::*;
 

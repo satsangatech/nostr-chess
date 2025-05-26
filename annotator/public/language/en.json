@@ -60,6 +60,7 @@
   "annotation_capture": "Capture",
   "annotation_move": "Move",
   "annotation_select_piece": "Select a piece to move",
+  "annotation_type_move": "Start typing...",
   "annotation_select_move": "Select a move",
   "annotation_play_move": "Play Move",
   "annotation_promotion": "Promotion",
