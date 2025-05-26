@@ -78,20 +78,16 @@ pub fn rookie_annotation() -> Html {
             <img
                 src={src}
                 alt={format!("{:?}", role)}
-                class="p-2 rounded-full bg-white/20 size-16 object-cover" />
+                class="p-2 rounded-full size-12 object-cover" />
         }
     } else {
         html! {}
     };
     let next_from_square_html = if let Some(square) = next_from_square.as_ref() {
         html! {
-            <shady_minions::ui::Card>
-                <shady_minions::ui::CardContent>
-                    <h3 class="text-center">
-                        { format!("{:?}", square) }
-                    </h3>
-                </shady_minions::ui::CardContent>
-            </shady_minions::ui::Card>
+            <h3 class="text-center size-12 p-2 text-2xl font-bold ">
+                { format!("{:?}", square) }
+            </h3>
         }
     } else {
         html! {}
@@ -100,37 +96,80 @@ pub fn rookie_annotation() -> Html {
     let move_html = if let Some(mv) = next_move.as_ref() {
         let san_move = shakmaty::san::SanPlus::from_move(game_ctx.last_game_position(), mv);
         html! {
-            <shady_minions::ui::Card>
-                <shady_minions::ui::CardContent>
-                    <h3 class="text-center">
-                        { format!("{san_move}") }
-                    </h3>
-                </shady_minions::ui::CardContent>
-            </shady_minions::ui::Card>
+            <h3 class="text-center size-12 p-2 text-2xl font-bold ">
+                { format!("{san_move}") }
+            </h3>
         }
     } else {
         html! {}
     };
 
     html! {
-            <div class="flex flex-col items-center flex-1 gap-3">
-                <h3 class="mb-4">{ language_ctx.t("annotation_select_piece") }</h3>
-                <div class="grid grid-cols-4 gap-2 items-center w-full justify-between">
-                    {back_option}
-                    {role_html}
-                    {next_from_square_html}
-                    {move_html}
+        <div class="flex flex-col items-center flex-1 gap-6 max-w-2xl">
+            // Header with Back Control
+            <div class="w-full flex items-center justify-between">
+                {back_option}
+                <h3 class="text-xl font-semibold">{ language_ctx.t("annotation_select_piece") }</h3>
+                <div class="w-16"></div> // Spacer for centering
+            </div>
+
+            // Preview Information Card
+            <div class="w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+                <div class="p-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="text-center space-y-2">
+                            <label class="text-sm font-medium text-gray-600 block">{"Role"}</label>
+                            {role_html}
+                        </div>
+
+                        <div class="text-center space-y-2 items-center justify-between flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 block">{"From Square"}</label>
+                            {next_from_square_html}
+                        </div>
+
+                        <div class="text-center space-y-2 items-center justify-between flex flex-col">
+                            <label class="text-sm font-medium text-gray-600 block">{"Move"}</label>
+                            {move_html}
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-zinc-900 rounded p-3 w-full">
+            </div>
+
+            // Main Content Area
+            <div class="w-full bg-zinc-900 border border-zinc-700 rounded-lg shadow-sm">
+                <div class="p-6">
                     {inner_html}
                 </div>
-                <div class="h-1 w-full rounded bg-zinc-200 my-3" />
+            </div>
+
+            // Action Button
+            <div class="w-full max-w-xs">
                 <PlayMoveButton
                     next_move={next_move.clone()}
                     next_role={next_role.clone()}
                     next_from_square={next_from_square.clone()} />
             </div>
+        </div>
     }
+    //html! {
+    //        <div class="flex flex-col items-center flex-1 gap-3">
+    //            <h3 class="mb-4">{ language_ctx.t("annotation_select_piece") }</h3>
+    //            <div class="grid grid-cols-4 gap-2 items-center w-full justify-between">
+    //                {back_option}
+    //                {role_html}
+    //                {next_from_square_html}
+    //                {move_html}
+    //            </div>
+    //            <div class="bg-zinc-900 rounded p-3 w-full">
+    //                {inner_html}
+    //            </div>
+    //            <div class="h-1 w-full rounded bg-zinc-200 my-3" />
+    //            <PlayMoveButton
+    //                next_move={next_move.clone()}
+    //                next_role={next_role.clone()}
+    //                next_from_square={next_from_square.clone()} />
+    //        </div>
+    //}
 }
 #[derive(Properties, PartialEq)]
 pub struct PieceSelectionProps {
