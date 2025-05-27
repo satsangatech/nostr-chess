@@ -105,10 +105,10 @@ pub fn annotation_display(props: &ExpertAnnotationProps) -> Html {
             <Input
                 class={classes!(
                     "w-full",
-                    "min-h-24",
+                    "min-h-18",
                     "pr-4", // Add padding on the right to prevent text overlap
                     "pl-4", // Add padding on the left
-                    "py-18",
+                    "py-12",
                     "rounded-lg",
                     "bg-secondary"
                 )}
@@ -119,14 +119,14 @@ pub fn annotation_display(props: &ExpertAnnotationProps) -> Html {
             <div class="absolute inset-0 flex items-center px-8">
                 // Left side - next move
                 <div class="flex-shrink-0 mr-2">
-                    <span class="text-4xl font-medium">
+                    <span class="text-2xl font-medium">
                         { next_move.as_ref().cloned().unwrap_or_default() }
                     </span>
                 </div>
 
                 // Right side - legal moves (with truncation)
                 <div class="flex-grow flex justify-end">
-                    <span class="text-4xl text-gray-500 truncate max-w-xs">
+                    <span class="text-2xl text-gray-500 truncate max-w-64">
                         { legal_moves_text }
                     </span>
                 </div>
@@ -218,7 +218,8 @@ pub fn annotation_calculator(props: &ExpertAnnotationProps) -> Html {
             <Input
                 class={input_class.clone()}
                 disabled={
-                    !legal_moves.iter().any(|m| {
+                    !legal_moves.iter()
+                    .any(|m| {
                     let san = shakmaty::san::SanPlus::from_move(last_position.clone(), m);
                     san.to_string().contains("N")})
                 }

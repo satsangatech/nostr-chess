@@ -1,4 +1,6 @@
 {
+  "common_white": "White",
+  "common_black": "Black",
   "common_settings": "Settings",
   "common_game_details": "Game Details",
   "common_experience": "Experience",
@@ -22,6 +24,8 @@
   "settings_default_experience": "Default Experience",
   "settings_default_level": "Default Level",
   "settings_default_level_description": "Select your default experience level",
+  "settings_default_orientation": "Default Orientation",
+  "settings_default_orientation_description": "Choose side to play as",
   "settings_auto_save": "Auto Save",
   "settings_key_recovery": "Key Recovery",
   

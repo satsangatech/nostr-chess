@@ -86,7 +86,7 @@ pub fn rookie_annotation() -> Html {
     };
     let next_from_square_html = if let Some(square) = next_from_square.as_ref() {
         html! {
-            <h3 class="text-center size-12 p-2 text-2xl font-bold ">
+            <h3 class="text-center size-8 p-2 text-lg font-bold ">
                 { format!("{:?}", square) }
             </h3>
         }
@@ -97,80 +97,74 @@ pub fn rookie_annotation() -> Html {
     let move_html = if let Some(mv) = next_move.as_ref() {
         let san_move = shakmaty::san::SanPlus::from_move(game_ctx.last_game_position(), mv);
         html! {
-            <h3 class="text-center size-12 p-2 text-2xl font-bold ">
+            <h3 class="text-center size-8 p-2 text-lg font-bold ">
                 { format!("{san_move}") }
             </h3>
         }
     } else {
         html! {}
     };
-
-    html! {
-        <div class="flex flex-col items-center flex-1 gap-6 max-w-2xl">
-            // Header with Back Control
-            <div class="w-full flex items-center justify-between">
+    let header_html = match next_role.as_ref() {
+        Some(_) => html! {
+            <div class="w-full flex gap-3 items-center">
+                // Back button
                 {back_option}
-                <h3 class="text-xl font-semibold">{ language_ctx.t("annotation_select_piece") }</h3>
-                <div class="w-2"></div> // Spacer for centering
-            </div>
+                // Preview Information Card
+                <div class="flex-1 bg-secondary rounded-lg shadow-sm">
+                    <div class="p-1">
+                        <div class="grid grid-cols-3 gap-1">
+                            <div class="text-center">
+                                <label class="text-xs font-medium text-gray-600 block">{"Role"}</label>
+                                {role_html}
+                            </div>
 
-            // Preview Information Card
-            <div class="w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-                <div class="p-4">
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="text-center space-y-2">
-                            <label class="text-sm font-medium text-gray-600 block">{"Role"}</label>
-                            {role_html}
-                        </div>
+                            <div class="text-center items-center justify-between flex flex-col">
+                                <label class="text-xs font-medium text-gray-600 block">{"From Square"}</label>
+                                {next_from_square_html}
+                            </div>
 
-                        <div class="text-center space-y-2 items-center justify-between flex flex-col">
-                            <label class="text-sm font-medium text-gray-600 block">{"From Square"}</label>
-                            {next_from_square_html}
-                        </div>
-
-                        <div class="text-center space-y-2 items-center justify-between flex flex-col">
-                            <label class="text-sm font-medium text-gray-600 block">{"Move"}</label>
-                            {move_html}
+                            <div class="text-center items-center justify-between flex flex-col">
+                                <label class="text-xs font-medium text-gray-600 block">{"Move"}</label>
+                                {move_html}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        },
+        None => html! {
+            <div class="w-full flex items-center justify-center text-center">
+                <h2 class="text-lg font-bold text-white">
+                    { language_ctx.t("annotation_select_piece") }
+                </h2>
+            </div>
+        },
+    };
+
+    html! {
+        <div class="flex flex-col items-center flex-1 gap-3 max-w-2xl">
+            // Header with Back Control
+            {header_html}
 
             // Main Content Area
-            <div class="w-full bg-zinc-900 border border-zinc-700 rounded-lg shadow-sm">
-                <div class="p-6">
+            <div class="w-full bg-secondary rounded-lg shadow-sm">
+                <div class="p-3 flex items-center justify-center">
                     {inner_html}
                 </div>
             </div>
-
-            // Action Button
-            <div class="w-full max-w-xs">
-                <PlayMoveButton
-                    next_move={next_move.clone()}
-                    next_role={next_role.clone()}
-                    next_from_square={next_from_square.clone()} />
-            </div>
+            // Play Move Button
+            {if next_role.is_some() {
+                html! {
+                    <PlayMoveButton
+                        next_move={next_move.clone()}
+                        next_role={next_role.clone()}
+                        next_from_square={next_from_square.clone()} />
+                }
+            } else {
+                html! {}
+            }}
         </div>
     }
-    //html! {
-    //        <div class="flex flex-col items-center flex-1 gap-3">
-    //            <h3 class="mb-4">{ language_ctx.t("annotation_select_piece") }</h3>
-    //            <div class="grid grid-cols-4 gap-2 items-center w-full justify-between">
-    //                {back_option}
-    //                {role_html}
-    //                {next_from_square_html}
-    //                {move_html}
-    //            </div>
-    //            <div class="bg-zinc-900 rounded p-3 w-full">
-    //                {inner_html}
-    //            </div>
-    //            <div class="h-1 w-full rounded bg-zinc-200 my-3" />
-    //            <PlayMoveButton
-    //                next_move={next_move.clone()}
-    //                next_role={next_role.clone()}
-    //                next_from_square={next_from_square.clone()} />
-    //        </div>
-    //}
 }
 #[derive(Properties, PartialEq)]
 pub struct PieceSelectionProps {
@@ -187,7 +181,7 @@ pub fn piece_selection(props: &PieceSelectionProps) -> Html {
     };
 
     html! {
-        <div class="grid grid-cols-2 gap-4 w-full">
+        <div class="grid grid-cols-2 gap-2 w-full justify-center align-center items-center place-items-center">
             <PieceSelector
                 piece={shakmaty::Role::Pawn}
                 onclick={set_role.clone()} />
@@ -246,11 +240,11 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
                 } else {
                     "text-zinc-400"
                 },
-                "p-2",
+                "p-6",
                 "rounded",
                 "aspect-square",
-                "w-full",
-                "h-full",
+                "min-h-32",
+                "min-w-32",
                 "flex",
                 "items-center",
                 "justify-center",
@@ -279,10 +273,9 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
                     } else {
                         "opacity-30"
                     },
-                    "p-2",
                     "rounded-full",
                     "bg-white/20",
-                    "size-16",
+                    "size-12",
                     "object-cover")}
             />
             <span class="text-sm text-center mt-2">
@@ -307,6 +300,12 @@ pub struct FromSquareSelectionProps {
 
 #[function_component(FromSquareSelection)]
 pub fn from_square_selection(props: &FromSquareSelectionProps) -> Html {
+    let configs = use_context::<crate::contexts::configs::AnnotatorConfigStore>()
+        .expect("AnnotatorConfigStore context not found");
+    let orientation = match configs.playing_as {
+        crate::configs::BoardPlayingSide::White => chessboard_js::ChessboardOrientation::White,
+        crate::configs::BoardPlayingSide::Black => chessboard_js::ChessboardOrientation::Black,
+    };
     let board_ref = use_node_ref();
     let game_ctx = crate::live_game::use_annotated_game();
     let legal_moves = game_ctx.legal_moves();
@@ -336,6 +335,7 @@ pub fn from_square_selection(props: &FromSquareSelectionProps) -> Html {
             let board_options = chessboard_js::ChessboardConfig {
                 draggable: false,
                 position: chessboard_js::ChessboardPosition::Fen(fen_board.to_string()),
+                orientation,
                 ..Default::default()
             };
             let board = chessboard_js::ChessBoardJs::new(board_id, Some(board_options));
@@ -427,6 +427,12 @@ pub struct MultiSquaresPreviewProps {
 
 #[function_component(MultiSquaresPreview)]
 pub fn multi_squares_preview(props: &MultiSquaresPreviewProps) -> Html {
+    let configs = use_context::<crate::contexts::configs::AnnotatorConfigStore>()
+        .expect("AnnotatorConfigStore context not found");
+    let orientation = match configs.playing_as {
+        crate::configs::BoardPlayingSide::White => chessboard_js::ChessboardOrientation::White,
+        crate::configs::BoardPlayingSide::Black => chessboard_js::ChessboardOrientation::Black,
+    };
     use std::collections::HashSet;
     let board_ref = use_node_ref();
     let game_ctx = crate::live_game::use_annotated_game();
@@ -452,6 +458,7 @@ pub fn multi_squares_preview(props: &MultiSquaresPreviewProps) -> Html {
             let board_options = chessboard_js::ChessboardConfig {
                 draggable: false,
                 position: chessboard_js::ChessboardPosition::Fen(board_fen.to_string()),
+                orientation,
                 ..Default::default()
             };
             let board = chessboard_js::ChessBoardJs::new(board_id, Some(board_options));

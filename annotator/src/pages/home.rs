@@ -14,20 +14,20 @@ pub fn home_page() -> Html {
     let config_ctx = crate::configs::use_annotator_config();
     html! {
         <>
-            <Tabs default_value={config_ctx.experience_level.to_string()}
-                class="flex flex-col size-full bg-muted">
+            <Tabs default_value={config_ctx.experience_level.as_ref().to_string()}
+                class="flex flex-col w-full">
                 <HomeHeader />
-                <div class="container flex-1 p-3 pb-6 flex flex-col">
+                <div class="flex-1 p-3 pb-6 flex flex-col">
                     <MoveList />
-                    <div class="h-[0.5px] bg-gray-600 my-6 min-w-sm rounded-lg  mx-auto" />
+                    <div class="h-[0.5px] bg-muted my-3 w-full max-w-xs rounded-lg  mx-auto" />
                     <TabsContent
                         class="flex flex-col justify-between"
-                        value={crate::configs::ExperienceLevel::Rookie.to_string()}>
+                        value={crate::configs::ExperienceLevel::Rookie.as_ref()}>
                         <crate::components::RookieAnnotation />
                     </TabsContent>
                     <TabsContent
                         class="flex-1 flex flex-col justify-end gap-6"
-                        value={crate::configs::ExperienceLevel::Expert.to_string()}>
+                        value={crate::configs::ExperienceLevel::Expert.as_ref()}>
                         <crate::components::ExpertAnnotation />
                     </TabsContent>
                 </div>
@@ -74,6 +74,15 @@ pub fn settings_drawer() -> Html {
         move |level: crate::contexts::configs::ExperienceLevel| {
             config_ctx.dispatch(
                 crate::contexts::configs::AnnotatorConfigAction::SetExperienceLevel(level),
+            );
+        }
+    };
+
+    let set_playing_side = {
+        let config_ctx = config_ctx.clone();
+        move |playing_as: crate::contexts::configs::BoardPlayingSide| {
+            config_ctx.dispatch(
+                crate::contexts::configs::AnnotatorConfigAction::SetPlayingAs(playing_as),
             );
         }
     };
@@ -136,6 +145,38 @@ pub fn settings_drawer() -> Html {
                         </div>
                     </div>
 
+                    <div class="rounded-lg bg-slate-50 p-3 sm:p-4 shadow-sm">
+                        <div class="mb-1.5 sm:mb-2">
+                            <label class="text-sm sm:text-base font-medium block mb-0.5 sm:mb-1">
+                                { language_ctx.t("settings_default_orientation") }
+                            </label>
+                            <p class="text-xs sm:text-sm text-muted-foreground">
+                                { language_ctx.t("settings_default_orientation_description") }
+                            </p>
+                        </div>
+                        <div class="mt-2">
+                            <div class="flex items-center justify-between px-1">
+                                <div class="flex items-center">
+                                    <span class="text-sm font-medium mr-2 sm:mr-3">{ language_ctx.t("common_white") }</span>
+                                    <Switch
+                                        checked={config_ctx.playing_as == crate::contexts::configs::BoardPlayingSide::Black}
+                                        onchange={
+                                            let set_playing_side = set_playing_side.clone();
+                                            Callback::from(move |checked: bool| {
+                                                if checked {
+                                                    set_playing_side(crate::contexts::configs::BoardPlayingSide::Black);
+                                                } else {
+                                                    set_playing_side(crate::contexts::configs::BoardPlayingSide::White);
+                                                }
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <span class="text-sm font-medium ml-2 sm:ml-3">{ language_ctx.t("common_black") }</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <Button
                         onclick={go_to_key_recovery}
                         class="w-full flex items-center justify-start py-2 px-3 sm:py-3 sm:px-4 h-auto bg-slate-100 border border-slate-200 text-sm sm:text-base shadow-sm break-words"
@@ -166,10 +207,10 @@ pub fn experience_selector() -> Html {
 
     html! {
             <TabsList class="flex flex-1">
-                <TabsTrigger value={crate::configs::ExperienceLevel::Rookie.to_string()}>
+                <TabsTrigger value={crate::configs::ExperienceLevel::Rookie.as_ref()}>
                     { language_ctx.t("common_rookie") }
                 </TabsTrigger>
-                <TabsTrigger value={crate::configs::ExperienceLevel::Expert.to_string()}>
+                <TabsTrigger value={crate::configs::ExperienceLevel::Expert.as_ref()}>
                     { language_ctx.t("common_expert") }
                 </TabsTrigger>
             </TabsList>
@@ -310,6 +351,7 @@ pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_white") }</label>
                         <Input
+                            id="form-details-white"
                             name="white"
                             r#type={shady_minions::ui::InputType::Text}
                             placeholder={ language_ctx.t("game_details_enter_white_player") }
@@ -322,6 +364,7 @@ pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_black") }</label>
                         <Input
+                            id="form-details-black"
                             name="black"
                             r#type={shady_minions::ui::InputType::Text}
                             placeholder={ language_ctx.t("game_details_enter_black_player") }
@@ -334,6 +377,7 @@ pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_date") }</label>
                         <Input
+                            id="form-details-date"
                             name="date"
                             r#type={shady_minions::ui::InputType::Date}
                             value={game.date.format("%Y-%m-%d").to_string()}
@@ -344,6 +388,7 @@ pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
                     <div class="space-y-2">
                         <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_event") }</label>
                         <Input
+                            id="form-details-event"
                             name="event"
                             value={match &*selected_event {
                                 rooky_core::pgn_standards::PgnEvent::Named(name) => name.clone(),
@@ -368,6 +413,7 @@ pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
                             <div class="space-y-2">
                                 <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_site") }</label>
                                 <Input
+                                    id="form-details-site"
                                     name="site"
                                     r#type={shady_minions::ui::InputType::Text}
                                     placeholder={ language_ctx.t("game_details_enter_site") }
@@ -382,6 +428,7 @@ pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
                             <div class="space-y-2">
                                 <label class="text-sm font-medium text-foreground">{ language_ctx.t("game_details_round") }</label>
                                 <Input
+                                    id="form-details-round"
                                     name="round"
                                     r#type={shady_minions::ui::InputType::Text}
                                     placeholder={ language_ctx.t("game_details_enter_round") }
@@ -432,7 +479,7 @@ pub fn move_list() -> Html {
     html! {
         <div
             ref={container_ref}
-            class="flex flex-row p-3 items-center w-full mx-auto overflow-x-auto whitespace-nowrap gap-3 pb-2 max-w-sm min-h-12 bg-zinc-800 rounded-lg"
+            class="flex flex-row p-3 items-center w-full mx-auto overflow-x-auto whitespace-nowrap gap-3 pb-2 max-w-sm min-h-12 bg-secondary rounded-lg"
         >
             { for moves.chunks(2).enumerate().map(|(index, m)| {
                 let white_move = m.first().expect("White move");
@@ -455,7 +502,7 @@ pub fn move_list() -> Html {
 
                 html! {
                     <div class="inline-flex items-center">
-                        <span class="text-gray-500 mr-1 text-xs">{ format!("{}.", move_number) }</span>
+                        <span class="text-secondary-foreground mr-1 text-sm">{ format!("{}.", move_number) }</span>
                         <span class={classes!(white_class, "mr-1")}>{ white_move.to_string() }</span>
                         { if let Some(black_move) = black_move {
                             html! { <span class={black_class}>{ black_move.to_string() }</span> }

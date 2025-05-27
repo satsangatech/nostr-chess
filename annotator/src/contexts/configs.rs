@@ -8,6 +8,14 @@ pub enum ExperienceLevel {
     Rookie,
     Expert,
 }
+impl AsRef<str> for ExperienceLevel {
+    fn as_ref(&self) -> &str {
+        match self {
+            ExperienceLevel::Rookie => "rookie",
+            ExperienceLevel::Expert => "expert",
+        }
+    }
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum Language {
@@ -15,6 +23,12 @@ pub enum Language {
     English,
     Spanish,
     Portuguese,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, Default)]
+pub enum BoardPlayingSide {
+    #[default]
+    White,
+    Black,
 }
 impl std::str::FromStr for ExperienceLevel {
     type Err = ();
@@ -28,19 +42,10 @@ impl std::str::FromStr for Language {
         serde_json::from_str(s).map_err(|_| ())
     }
 }
-impl std::fmt::Display for ExperienceLevel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        serde_json::to_string(self)
-            .map_err(|_| std::fmt::Error)?
-            .fmt(f)
-    }
-}
-
-impl std::fmt::Display for Language {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        serde_json::to_string(self)
-            .map_err(|_| std::fmt::Error)?
-            .fmt(f)
+impl std::str::FromStr for BoardPlayingSide {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s).map_err(|_| ())
     }
 }
 
@@ -49,6 +54,7 @@ pub struct AnnotatorConfigurationEntry {
     id: String,
     pub language: Language,
     pub experience_level: ExperienceLevel,
+    pub playing_as: BoardPlayingSide,
 }
 impl Default for AnnotatorConfigurationEntry {
     fn default() -> Self {
@@ -56,6 +62,7 @@ impl Default for AnnotatorConfigurationEntry {
             id: "app_config".to_string(),
             language: Language::English,
             experience_level: ExperienceLevel::Rookie,
+            playing_as: BoardPlayingSide::White,
         }
     }
 }
@@ -90,6 +97,7 @@ pub struct AnnotatorConfig {
     pub loaded: bool,
     pub language: Language,
     pub experience_level: ExperienceLevel,
+    pub playing_as: BoardPlayingSide,
 }
 
 pub enum AnnotatorConfigAction {
@@ -97,6 +105,7 @@ pub enum AnnotatorConfigAction {
     LoadConfig(AnnotatorConfigurationEntry),
     SetLanguage(Language),
     SetExperienceLevel(ExperienceLevel),
+    SetPlayingAs(BoardPlayingSide),
 }
 
 impl Reducible for AnnotatorConfig {
@@ -108,6 +117,7 @@ impl Reducible for AnnotatorConfig {
                 let new_entry = AnnotatorConfigurationEntry {
                     language,
                     experience_level: self.experience_level,
+                    playing_as: self.playing_as,
                     ..Default::default()
                 };
                 yew::platform::spawn_local(async move {
@@ -120,12 +130,14 @@ impl Reducible for AnnotatorConfig {
                     loaded: self.loaded,
                     language,
                     experience_level: self.experience_level,
+                    playing_as: self.playing_as,
                 })
             }
             AnnotatorConfigAction::SetExperienceLevel(experience_level) => {
                 let new_entry = AnnotatorConfigurationEntry {
                     language: self.language,
                     experience_level,
+                    playing_as: self.playing_as,
                     ..Default::default()
                 };
                 yew::platform::spawn_local(async move {
@@ -137,22 +149,46 @@ impl Reducible for AnnotatorConfig {
                     loaded: self.loaded,
                     language: self.language,
                     experience_level,
+                    playing_as: self.playing_as,
                 })
             }
             AnnotatorConfigAction::LoadConfig(AnnotatorConfigurationEntry {
                 id: _,
                 language,
                 experience_level,
+                playing_as,
             }) => std::rc::Rc::new(Self {
                 loaded: true,
                 language,
                 experience_level,
+                playing_as,
             }),
             AnnotatorConfigAction::Loaded => std::rc::Rc::new(Self {
                 loaded: true,
                 language: self.language,
                 experience_level: self.experience_level,
+                playing_as: self.playing_as,
             }),
+            AnnotatorConfigAction::SetPlayingAs(playing_as) => {
+                let new_entry = AnnotatorConfigurationEntry {
+                    playing_as,
+                    experience_level: self.experience_level,
+                    language: self.language,
+                    ..Default::default()
+                };
+                yew::platform::spawn_local(async move {
+                    if let Err(e) = new_entry.save_to_store().await {
+                        web_sys::console::error_1(&format!("Error saving config: {:?}", e).into());
+                    }
+                });
+
+                std::rc::Rc::new(Self {
+                    playing_as,
+                    loaded: self.loaded,
+                    language: self.language,
+                    experience_level: self.experience_level,
+                })
+            }
         }
     }
 }
