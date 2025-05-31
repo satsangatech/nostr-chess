@@ -19,7 +19,7 @@ pub fn home_page() -> Html {
                 <HomeHeader />
                 <div class="flex-1 p-3 pb-6 flex flex-col">
                     <MoveList />
-                    <div class="h-[0.5px] bg-muted my-3 w-full max-w-xs rounded-lg  mx-auto" />
+                    <div class="h-[0.5px] bg-muted my-3 w-full max-w-xs rounded-lg mx-auto" />
                     <TabsContent
                         class="flex flex-col justify-between"
                         value={crate::configs::ExperienceLevel::Rookie.as_ref()}>
@@ -94,7 +94,7 @@ pub fn settings_drawer() -> Html {
 
     html! {
         <>
-            <Button {onclick}>
+            <Button {onclick} class="bg-transparent">
                 <lucide_yew::Menu class="size-4" />
             </Button>
             <LeftDrawer {is_open} >
@@ -255,7 +255,7 @@ pub fn game_details_modal() -> Html {
 
     html! {
         <>
-            <Button onclick={close_on_click}>
+            <Button onclick={close_on_click} class="bg-transparent">
                 <lucide_yew::SquarePen class="size-4" />
             </Button>
             <Modal {is_open}>
@@ -479,7 +479,7 @@ pub fn move_list() -> Html {
     html! {
         <div
             ref={container_ref}
-            class="flex flex-row p-3 items-center w-full mx-auto overflow-x-auto whitespace-nowrap gap-3 pb-2 max-w-sm min-h-12 bg-secondary rounded-lg"
+            class="flex flex-row p-3 items-center w-full mx-auto overflow-x-auto whitespace-nowrap gap-3 pb-2 max-w-sm min-h-12 bg-background rounded-lg"
         >
             { for moves.chunks(2).enumerate().map(|(index, m)| {
                 let white_move = m.first().expect("White move");
