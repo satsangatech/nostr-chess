@@ -1,3 +1,4 @@
+use shady_minions::ui::Card;
 use yew::prelude::*;
 
 #[function_component(RookieAnnotation)]
@@ -110,21 +111,21 @@ pub fn rookie_annotation() -> Html {
                 // Back button
                 {back_option}
                 // Preview Information Card
-                <div class="flex-1 bg-secondary rounded-lg shadow-sm">
+                <div class="flex-1 bg-background rounded-lg shadow-sm">
                     <div class="p-1">
                         <div class="grid grid-cols-3 gap-1">
                             <div class="text-center">
-                                <label class="text-xs font-medium text-gray-600 block">{"Role"}</label>
+                                <label class="text-xs font-medium text-foreground block">{"Role"}</label>
                                 {role_html}
                             </div>
 
                             <div class="text-center items-center justify-between flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 block">{"From Square"}</label>
+                                <label class="text-xs font-medium text-foreground block">{"From Square"}</label>
                                 {next_from_square_html}
                             </div>
 
                             <div class="text-center items-center justify-between flex flex-col">
-                                <label class="text-xs font-medium text-gray-600 block">{"Move"}</label>
+                                <label class="text-xs font-medium text-foreground block">{"Move"}</label>
                                 {move_html}
                             </div>
                         </div>
@@ -147,11 +148,9 @@ pub fn rookie_annotation() -> Html {
             {header_html}
 
             // Main Content Area
-            <div class="w-full bg-secondary rounded-lg shadow-sm">
-                <div class="p-3 flex items-center justify-center">
-                    {inner_html}
-                </div>
-            </div>
+            <Card class="p-3 min-w-sm border-background">
+                {inner_html}
+            </Card>
             // Play Move Button
             {if next_role.is_some() {
                 html! {
@@ -226,7 +225,7 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
             class={classes!(
                 if can_be_moved {
                     match game_ctx.color_turn() {
-                        shakmaty::Color::White => "bg-white",
+                        shakmaty::Color::White => "bg-white hover:text-white",
                         shakmaty::Color::Black => "bg-zinc-900",
                     }
                 } else {

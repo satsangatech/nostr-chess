@@ -3,20 +3,20 @@
 @source "../../shady-minions/src/**";
 
 :root {
-  --background: hsl(40, 30%, 95%);            /* warm ivory */
-  --foreground: hsl(30, 20%, 10%);            /* deep brown, classic */
-  --primary: hsl(0, 0%, 15%);                 /* rich black - chess piece color */
+  --background: hsl(60, 2%, 12%);            /* black */
+  --foreground: hsl(0, 0%, 100%);            /* white */
+  --primary: hsl(247, 95%, 45%);                 /* dark blue */
   --primary-foreground: hsl(0, 0%, 100%);     /* white */
-  --secondary: hsl(30, 20%, 70%);             /* light wood tone */
-  --secondary-foreground: hsl(30, 30%, 20%);  /* darker wood for contrast */
+  --secondary: hsl(74, 88%, 48%);             /* light green */
+  --secondary-foreground: hsl(0, 0%, 73%);  /* light gray */
   --destructive: hsl(0, 80%, 55%);            /* calm red for alerts */
-  --muted: hsl(40, 30%, 90%);                 /* muted ivory */
-  --muted-foreground: hsl(30, 15%, 35%);      /* subtle warm gray */
-  --accent: hsl(140, 30%, 40%);               /* deep green – elegant highlight */
+  --muted: hsl(0, 0%, 73%);                 /* light gray */
+  --muted-foreground: hsl(0, 0%, 38%);      /* dark gray */
+  --accent: hsl(120, 2%, 18%);               /* dark */
   --accent-foreground: hsl(140, 20%, 90%);    /* pale greenish-beige */
   --border: hsl(30, 15%, 80%);                /* soft brown-gray */
   --input: hsl(30, 15%, 92%);                 /* light ivory input background */
-  --ring: hsl(30, 15%, 75%);                  /* warm gray ring */
+  --ring: hsl(74, 88%, 48%);                  /* light green */
 }
 
 .dark {

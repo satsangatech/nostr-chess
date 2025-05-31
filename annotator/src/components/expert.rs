@@ -110,7 +110,7 @@ pub fn annotation_display(props: &ExpertAnnotationProps) -> Html {
                     "pl-4", // Add padding on the left
                     "py-12",
                     "rounded-lg",
-                    "bg-secondary"
+                    "bg-muted-foreground"
                 )}
                 disabled={true}
                 value={""} // Keep the actual input value empty
@@ -119,14 +119,14 @@ pub fn annotation_display(props: &ExpertAnnotationProps) -> Html {
             <div class="absolute inset-0 flex items-center px-8">
                 // Left side - next move
                 <div class="flex-shrink-0 mr-2">
-                    <span class="text-2xl font-medium">
+                    <span class="text-2xl font-medium text-muted">
                         { next_move.as_ref().cloned().unwrap_or_default() }
                     </span>
                 </div>
 
                 // Right side - legal moves (with truncation)
                 <div class="flex-grow flex justify-end">
-                    <span class="text-2xl text-gray-500 truncate max-w-64">
+                    <span class="text-2xl text-foreground truncate max-w-64">
                         { legal_moves_text }
                     </span>
                 </div>
