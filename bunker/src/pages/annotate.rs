@@ -13,6 +13,8 @@ use crate::ShareRookyGameCard;
 #[function_component(NewJsChessGame)]
 pub fn js_chess_game() -> Html {
     let board_ref = use_node_ref();
+    let game_ctx = use_context::<crate::contexts::live_game::AnnotatedGameHistoryStore>()
+        .expect("ChessboardContext not found");
 
     let game_board = use_mut_ref(|| None::<chessboard_js::ChessBoardJs>);
     let game_position = use_mut_ref(shakmaty::Chess::new);
@@ -118,29 +120,32 @@ pub fn js_chess_game() -> Html {
 
     {
         let board_setting = game_board.clone();
-        use_effect_with((), move |()| {
-            let board_options = chessboard_js::ChessboardConfig {
-                draggable: true,
-                drop_off_board: chessboard_js::DropOffBoard::Snapback,
-                on_drop: Some(
-                    web_sys::wasm_bindgen::closure::Closure::wrap(on_drop_cb)
-                        .into_js_value()
-                        .unchecked_into(),
-                ),
-                on_drag_start: Some(
-                    web_sys::wasm_bindgen::closure::Closure::wrap(on_snap_start)
-                        .into_js_value()
-                        .unchecked_into(),
-                ),
-                on_snap_end: Some(
-                    web_sys::wasm_bindgen::closure::Closure::wrap(on_snap_end)
-                        .into_js_value()
-                        .unchecked_into(),
-                ),
-                ..Default::default()
-            };
-            let board = chessboard_js::ChessBoardJs::new("game", Some(board_options));
-            *board_setting.borrow_mut() = Some(board);
+        use_effect_with(game_ctx.synced, move |synced| {
+            if *synced {
+                let board_options = chessboard_js::ChessboardConfig {
+                    draggable: true,
+                    piece_theme: "/public/img/pieces/{piece}.svg",
+                    drop_off_board: chessboard_js::DropOffBoard::Snapback,
+                    on_drop: Some(
+                        web_sys::wasm_bindgen::closure::Closure::wrap(on_drop_cb)
+                            .into_js_value()
+                            .unchecked_into(),
+                    ),
+                    on_drag_start: Some(
+                        web_sys::wasm_bindgen::closure::Closure::wrap(on_snap_start)
+                            .into_js_value()
+                            .unchecked_into(),
+                    ),
+                    on_snap_end: Some(
+                        web_sys::wasm_bindgen::closure::Closure::wrap(on_snap_end)
+                            .into_js_value()
+                            .unchecked_into(),
+                    ),
+                    ..Default::default()
+                };
+                let board = chessboard_js::ChessBoardJs::new("game", Some(board_options));
+                *board_setting.borrow_mut() = Some(board);
+            }
             || {}
         });
     }
@@ -149,7 +154,7 @@ pub fn js_chess_game() -> Html {
         <div class="pl-12 h-full flex flex-col justify-evenly">
             <h2 class="text-4xl text-white font-black">{"New Game"}</h2>
             <div class="flex justify-evenly gap-6">
-                <Card class="h-full bg-zinc-800 min-w-sm max-w-sm">
+                <Card class="h-full min-w-sm max-w-sm">
                     <CardHeader>
                         <CardTitle class="mb-8">
                             <div class="flex justify-between items-top">
@@ -160,7 +165,10 @@ pub fn js_chess_game() -> Html {
                             </div>
                         </CardTitle>
                     </CardHeader>
-                    <GameCard pgn_game={pgn_game.borrow().clone()}  />
+                    <CardContent>
+                        <crate::components::GameCard pgn_game={pgn_game.borrow().clone()}  />
+                        <ShareGameModal pgn_game={pgn_game.borrow().clone()} />
+                    </CardContent>
                 </Card>
                 <div class="flex-1 flex justify-center items-start">
                     <div ref={board_ref} id="game" class="w-full max-w-[42rem] aspect-square" />
@@ -290,110 +298,20 @@ pub fn game_form(props: &GameFormProps) -> Html {
     }
 }
 
-#[derive(Properties, PartialEq)]
-pub struct GameCardProps {
-    pub pgn_game: rooky_core::RookyGame,
-}
-
-#[function_component(GameCard)]
-pub fn game_card(props: &GameCardProps) -> Html {
-    let rooky_core::RookyGame {
-        event,
-        outcome,
-        moves,
-        white,
-        black,
-        date,
-        site,
-        round,
-    } = &props.pgn_game;
-
-    // Check if it's a casual game
-    let is_casual_game = event == &rooky_core::pgn_standards::PgnEvent::Casual;
-    let white_name = if white.is_empty() {
-        "White".to_string()
-    } else {
-        white.clone()
-    };
-    let black_name = if black.is_empty() {
-        "Black".to_string()
-    } else {
-        black.clone()
-    };
-
-    html! {
-            <CardContent>
-                <div class="w-full space-y-2">
-                    <h3 class="text-lg font-bold text-white">
-                        { format!("{white_name} vs {black_name}") }
-                    </h3>
-                    <div class="flex justify-between text-white">
-                        <span class="text-sm font-bold">{ "Date" }</span>
-                        <span class="text-sm">{ date.format("%Y-%m-%d").to_string() }</span>
-                    </div>
-                    <div class="flex justify-between text-white">
-                        <span class="text-sm font-bold">{ "Result" }</span>
-                        <span class="text-sm">{ outcome.to_string() }</span>
-                    </div>
-                    <div class="flex justify-between text-white">
-                        <span class="text-sm font-bold">{ "Event" }</span>
-                        <span class="text-sm">{ event.to_string() }</span>
-                    </div>
-                    {if !is_casual_game {
-                        html! {
-                            <>
-                            <div class="flex justify-between text-white">
-                                <span class="text-sm font-bold">{ "Site" }</span>
-                                <span class="text-sm">{ site.to_string() }</span>
-                            </div>
-                            <div class="flex justify-between text-white">
-                                <span class="text-sm font-bold">{ "Round" }</span>
-                                <span class="text-sm">{ round.to_string() }</span>
-                            </div>
-                            </>
-                        }
-                    } else { html! {}}}
-                </div>
-                <div id="separator" class="h-[0.5px] bg-zinc-600 my-12" />
-                <div class="text-sm text-white flex flex-wrap gap-1">
-                    {
-                        moves.iter().enumerate().map(|(i, move_text)| {
-                            let turn = i / 2;
-                            let is_white = i % 2 == 0;
-                            let turn_number = turn + 1;
-
-                            html! {
-                                <span class={classes!("inline-flex", "items-center", "whitespace-nowrap", "mr-1")}>
-                                    {
-                                        if is_white {
-                                            html! { <span class="mr-0.5">{ format!("{}.", turn_number) }</span> }
-                                        } else {
-                                            html! {}
-                                        }
-                                    }
-                                    <span>{ move_text.to_string() }</span>
-                                </span>
-                            }
-                        }).collect::<Html>()
-                    }
-                </div>
-                <div id="separator" class="h-[0.5px] bg-zinc-600 my-12" />
-                <ShareGameModal pgn_game={props.pgn_game.clone()} />
-            </CardContent>
-    }
-}
 #[function_component(GameDetailsModal)]
 pub fn game_details_modal(props: &GameFormProps) -> Html {
     let is_open = use_state(|| false);
     html! {
         <>
             <Button
+                class="p-4"
+                size={shady_minions::ui::ButtonSize::Small}
                 onclick={
                     let is_open = is_open.clone();
                     Callback::from(move |_| {
                     is_open.set(!&*is_open);
                 })}>
-                <lucide_yew::SquarePen class="size-8" />
+                <lucide_yew::SquarePen class="size-6" />
             </Button>
             <Modal {is_open}>
                 <GameForm ..props.clone() />
@@ -403,7 +321,7 @@ pub fn game_details_modal(props: &GameFormProps) -> Html {
 }
 
 #[function_component(ShareGameModal)]
-pub fn share_game_modal(props: &GameCardProps) -> Html {
+pub fn share_game_modal(props: &crate::components::GameCardProps) -> Html {
     let is_open = use_state(|| false);
     let game = props.pgn_game.clone();
     html! {

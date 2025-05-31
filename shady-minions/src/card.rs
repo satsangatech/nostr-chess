@@ -13,6 +13,7 @@ pub fn card(props: &CardProps) -> Html {
     let classes = classes!(
         "rounded-lg",
         "border",
+        "border-border",
         "bg-background",
         "text-foreground",
         "shadow-sm",

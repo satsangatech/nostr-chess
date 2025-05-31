@@ -26,8 +26,8 @@ pub fn login_form() -> Html {
         <>
         <img
             class={classes!("mb-4",  "mx-auto")}
-            src="public/img/logo_nombre.svg"
-            alt="Paravida Logo" />
+            src="public/img/splashscreen.svg"
+            alt="Rooky Logo" />
         <Card class={classes!("max-w-sm", "min-w-sm")}>
             <CardHeader>
                 <CardTitle>{ "Chess Bunker" }</CardTitle>
@@ -158,7 +158,7 @@ pub fn new_key_form() -> Html {
     html! {
         <Card>
             <CardHeader>
-                <CardTitle>{"Iniciar Sesión"}</CardTitle>
+                <CardTitle>{"Log In"}</CardTitle>
                 <CardDescription class={classes!("flex-1")}>
                     {
                         r#"
@@ -171,8 +171,8 @@ pub fn new_key_form() -> Html {
             <CardContent class={classes!("space-y-4")}>
                 <Tabs default_value="mnemonic" class={classes!("w-full")}>
                     <TabsList class={classes!("justify-stretch", "w-full", "flex")}>
-                        <TabsTrigger value="mnemonic">{ "Frase Secreta" }</TabsTrigger>
-                        <TabsTrigger value="hex-key">{ "Contraseña" }</TabsTrigger>
+                        <TabsTrigger value="mnemonic">{ "Seed Phrase" }</TabsTrigger>
+                        <TabsTrigger value="hex-key">{ "Passkey" }</TabsTrigger>
                     </TabsList>
                     <TabsContent value="mnemonic" class={classes!("space-y-4")}>
                         <Form onsubmit={mnemonic_submit}>
@@ -272,7 +272,7 @@ pub fn new_key_form() -> Html {
     html! {
         <Card>
             <CardHeader>
-                <CardTitle>{ "Nueva Llave" }</CardTitle>
+                <CardTitle>{ "New Key" }</CardTitle>
                 <CardDescription class={classes!("flex-1")}>
                     { r#"
                         This key is secret.

@@ -1,4 +1,3 @@
-use nostr_minions::browser_api::IdbStoreManager;
 use shady_minions::ui::{Card, CardContent, CardHeader, CardTitle};
 use yew::prelude::*;
 
@@ -7,6 +6,9 @@ pub fn home_page() -> Html {
     html! {
         <>
             <div class="relative flex flex-col size-full items-center justify-center text-white gap-8">
+                <div class="absolute top-12 right-12">
+                    <crate::components::NotificationIcon />
+                </div>
                 <div class="text-center space-y-1">
                     <h2 class="text-7xl font-black mb-4">{"Welcome to your Bunker?!"}</h2>
                     <p class="text-xl font-bold">{"Your personal chess game database."}</p>
@@ -23,64 +25,38 @@ pub fn home_page() -> Html {
 
 #[function_component(InboxSummary)]
 pub fn inbox_summary() -> Html {
-    let db = use_state(|| 0);
-    {
-        let db = db.clone();
-        use_effect_with((), move |_| {
-            let db = db.clone();
-            yew::platform::spawn_local(async move {
-                if let Ok(rooky_db) =
-                    rooky_core::idb::RookyGameEntry::retrieve_all_from_store().await
-                {
-                    db.set(rooky_db.len());
-                }
-            });
-            || {}
-        });
-    }
+    let games_ctx = crate::live_game::use_game_history();
+    let games = games_ctx.unread_games().len();
 
     html! {
         <div class="relative bg-white rounded-[2vw] px-12 py-2 h-36 text-black flex flex-col justify-center">
-            <p class="text-6xl font-bold">{format!("{}", *db)}</p>
+            <p class="text-6xl font-bold">{format!("{}", games)}</p>
             <p class="text-lg">{"Games in Inbox"}</p>
-            <div class="absolute -left-1 top-1/2 bg-purple-500 rounded-[1vw] h-24 w-4 -translate-y-12"></div>
+            <div class="absolute -left-1 top-1/2 bg-secondary rounded-[1vw] h-24 w-4 -translate-y-12"></div>
         </div>
     }
 }
 #[function_component(DatabaseSummary)]
 pub fn database_summary() -> Html {
-    let db = use_state(|| 0);
-    {
-        let db = db.clone();
-        use_effect_with((), move |_| {
-            let db = db.clone();
-            yew::platform::spawn_local(async move {
-                if let Ok(rooky_db) =
-                    rooky_core::idb::RookyGameEntry::retrieve_all_from_store().await
-                {
-                    db.set(rooky_db.len());
-                }
-            });
-            || {}
-        });
-    }
+    let games_ctx = crate::live_game::use_game_history();
+    let games = games_ctx.rooky_game_entries().len();
 
     html! {
         <div class="relative bg-white rounded-[2vw] px-12 py-2 h-36 text-black flex flex-col justify-center">
-            <p class="text-6xl font-bold">{format!("{}", *db)}</p>
+            <p class="text-6xl font-bold">{format!("{}", games)}</p>
             <p class="text-lg">{"Total games in database"}</p>
-            <div class="absolute -left-1 top-1/2 bg-orange-500 rounded-[1vw] h-24 w-4 -translate-y-12"></div>
+            <div class="absolute -left-1 top-1/2 bg-primary rounded-[1vw] h-24 w-4 -translate-y-12"></div>
         </div>
     }
 }
 
 #[function_component(NostrIdSummary)]
 pub fn nostr_id_summary() -> Html {
-    let Some(keypair) = nostr_minions::key_manager::use_nostr_key() else {
+    if nostr_minions::key_manager::use_nostr_key().is_none() {
         return html! {
             <Card class="bg-black border-white">
                 <CardHeader>
-                    <CardTitle>{"Nostr ID Summary"}</CardTitle>
+                    <CardTitle>{"Nostr ID"}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p>{"No Nostr keypair found."}</p>
@@ -89,13 +65,10 @@ pub fn nostr_id_summary() -> Html {
         };
     };
     html! {
-        <Card class="col-span-2 bg-black border-white text-white">
-            <CardHeader>
-                <CardTitle>{"Nostr ID Summary"}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>{format!("Nostr ID: {}", keypair.npub().expect("couldnt encode npub"))}</p>
-            </CardContent>
-        </Card>
+        <div class="relative col-span-2">
+            <Card>
+                <crate::components::UserProfileCard />
+            </Card>
+        </div>
     }
 }

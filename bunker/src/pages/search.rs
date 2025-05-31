@@ -2,8 +2,8 @@ use futures_util::StreamExt;
 use nostr_minions::browser_api::IdbStoreManager;
 use shady_minions::ui::{
     Button, ButtonType, ButtonVariant, Card, CardContent, CardDescription, CardHeader, CardTitle,
-    Checkbox, Form, Input, InputType, Label, Popover, PopoverContent, PopoverPosition,
-    PopoverTrigger, Select, SelectContent, SelectItem, SelectTrigger,
+    Form, Input, InputType, Label, Popover, PopoverContent, PopoverPosition, PopoverTrigger,
+    Select, SelectContent, SelectItem, SelectTrigger,
 };
 use web_sys::wasm_bindgen::JsCast;
 use yew::prelude::*;
@@ -25,11 +25,12 @@ pub fn search_page() -> Html {
     let close_button = if selected.is_some() {
         html! {
             <Button
+                variant={ButtonVariant::Outline}
                 r#type={ButtonType::Button}
                 class="absolute top-4 right-4"
                 onclick={close_search}
             >
-                <lucide_yew::CircleX class="size-4" />
+                <lucide_yew::ArrowLeft class="size-8" />
             </Button>
         }
     } else {
@@ -60,10 +61,12 @@ fn search_picker(props: &SearchPickerProps) -> Html {
     html! {
         <Card class="size-fit max-w-3xl mx-auto">
             <CardHeader>
-              <CardTitle>{"Searching for games?"}</CardTitle>
-              <CardDescription>{"Query your favourite sites and find games to save in your app."}</CardDescription>
+                <CardTitle>{"Searching for games?"}</CardTitle>
+                <CardDescription class="text-sm text-white">
+                    {"Query your favourite sites and find games to save in your app."}
+                </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent class="space-y-4">
                 <h3 class="text-lg font-semibold">{"What site would you like to query?"}</h3>
                 <div class="flex flex-col gap-4">
                     <Button
@@ -110,33 +113,57 @@ fn search_picker(props: &SearchPickerProps) -> Html {
 pub fn external_search_form() -> Html {
     let query_state = use_state(external::LichessGameQuery::default);
     let keypair = nostr_minions::key_manager::use_nostr_key();
+    let game_ctx = crate::live_game::use_game_history();
     let onsubmit = {
         let query_state = query_state.clone();
+        let game_ctx = game_ctx.dispatcher();
         Callback::from(move |_| {
             let query_state = (*query_state).clone();
 
             if let Some(key_ctx) = keypair.clone() {
+                let game_ctx = game_ctx.clone();
                 yew::platform::spawn_local(async move {
                     let Ok(mut resp) = external::LichessClient::default()
                         .stream_game_history(query_state)
                         .await
                     else {
                         web_sys::console::log_1(&"Failed to get request".into());
+                        nostr_minions::widgets::toastify::ToastifyOptions::new_failure(
+                            "Failed to fetch games. Please check your query parameters.",
+                        )
+                        .show();
                         return;
                     };
+                    let mut count = 0;
                     while let Some(game) = resp.next().await {
-                        web_sys::console::log_1(&format!("{:?}", game).into());
+                        count += 1;
                         let mut new_note: nostr_minions::nostro2::NostrNote = game.into();
-                        key_ctx
-                            .sign_note(&mut new_note)
-                            .expect("Failed to sign note");
-                        let entry: rooky_core::idb::RookyGameEntry =
-                            new_note.try_into().expect("couldnt create note");
-                        let Ok(_) = entry.save_to_store().await else {
-                            web_sys::console::log_1(&"Failed to save note".into());
-                            return;
+                        if key_ctx.sign_note(&mut new_note).is_err() {
+                            continue;
+                        }
+                        let entry = rooky_core::idb::RookyGameEntry {
+                            id: new_note.id.clone().unwrap_or_default(),
+                            note: new_note,
+                            origin: rooky_core::idb::GameOrigin::Public,
                         };
+                        if entry.clone().save_to_store().await.is_err() {
+                            continue;
+                        }
+                        game_ctx.dispatch(crate::live_game::AnnotatedGameHistoryAction::AddGame(
+                            entry.clone(),
+                        ));
                     }
+                    if count == 0 {
+                        nostr_minions::widgets::toastify::ToastifyOptions::new_failure(
+                            "No games found for the given query.",
+                        )
+                        .show();
+                        return;
+                    }
+                    nostr_minions::widgets::toastify::ToastifyOptions::new_success(
+                        "Games saved successfully!",
+                    )
+                    .show();
                 });
             }
         })
@@ -163,8 +190,10 @@ pub fn external_search_form() -> Html {
     html! {
         <Card class="size-fit max-w-3xl mx-auto">
             <CardHeader>
-              <CardTitle>{"Lichess Game Query"}</CardTitle>
-              <CardDescription>{"Fill out the form to create a LichessGameQuery struct"}</CardDescription>
+                <CardTitle>{"Lichess Game Query"}</CardTitle>
+                <CardDescription class="text-sm text-white">
+                    {"Fill out the form to create a LichessGameQuery struct"}
+                </CardDescription>
             </CardHeader>
             <CardContent>
             <Form {onsubmit} class="space-y-6">
@@ -186,36 +215,36 @@ pub fn external_search_form() -> Html {
 
                   <div class="grid gap-2">
                     <Label r#for="max" class="font-medium">
-                    {"Max Games"}
+                        {"Max Games"}
+                        <span class="text-red-500">{"*"}</span>
                     </Label>
                     <Input
-                      id="max"
-                      name="max"
-                      r#type={InputType::Number}
-                      min="1"
-                      placeholder="Maximum number of games"
-                      value={query_state.max.map_or("".to_string(), |v| v.to_string())}
-                      onchange={max_games_state}
-                    />
+                        id="max"
+                        name="max"
+                        r#type={InputType::Number}
+                        min="1"
+                        required={true}
+                        placeholder="Maximum number of games"
+                        value={query_state.max.map_or("".to_string(), |v| v.to_string())}
+                        onchange={max_games_state}
+                        />
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex items-center space-x-2">
-                      <Checkbox
-                        id="rated"
-                        checked={query_state.rated.unwrap_or_default()}
-                        onchange={
-                            let query_state = query_state.clone();
-                            move |e: bool| {
-                            query_state.set(external::LichessGameQuery {
-                                rated: Some(e),
-                                ..(*query_state).clone()
-                            });
-                        }}
-                      />
-                      <Label r#for="rated" class="font-medium">
-                      {"Rated Games Only"}
+
+                    <div class="grid gap-2">
+                      <Label r#for="color" class="font-medium">
+                      {"Player Color"}
                       </Label>
+                       <Select::<shakmaty::Color> id="color">
+                         <SelectTrigger::<shakmaty::Color> >
+                           //<::SelectValue::<shakmaty::Color> placeholder="::Select color" />
+                         </SelectTrigger::<shakmaty::Color>>
+                         <SelectContent::<shakmaty::Color>>
+                            <SelectItem::<shakmaty::Color> value={shakmaty::Color::White} />
+                            <SelectItem::<shakmaty::Color> value={shakmaty::Color::Black} />
+                         </SelectContent::<shakmaty::Color>>
+                       </Select::<shakmaty::Color>>
                     </div>
 
                     <div class="grid gap-2">
@@ -285,103 +314,19 @@ pub fn external_search_form() -> Html {
                       </Popover>
                     </div>
                   </div>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="grid gap-2">
-                      <Label r#for="color" class="font-medium">
-                      {"Player Color"}
-                      </Label>
-                       <Select::<shakmaty::Color> id="color">
-                         <SelectTrigger::<shakmaty::Color> >
-                           //<::SelectValue::<shakmaty::Color> placeholder="::Select color" />
-                         </SelectTrigger::<shakmaty::Color>>
-                         <SelectContent::<shakmaty::Color>>
-                            <SelectItem::<shakmaty::Color> value={shakmaty::Color::White} />
-                            <SelectItem::<shakmaty::Color> value={shakmaty::Color::Black} />
-                         </SelectContent::<shakmaty::Color>>
-                       </Select::<shakmaty::Color>>
-                    </div>
-
-                    <div class="grid gap-2">
-                      <Label r#for="vs" class="font-medium">
-                      {"Opponent Username"}
-                      </Label>
-                      <Input
-                        id="vs"
-                        name="vs"
-                        placeholder="Opponent's username"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="flex items-center space-x-2">
-                      <Checkbox
-                        id="finished"
-                        checked={query_state.finished.unwrap_or_default()}
-                        onchange={
-                            let query_state = query_state.clone();
-                            move |e: bool| {
-                            query_state.set(external::LichessGameQuery {
-                                finished: Some(e),
-                                ..(*query_state).clone()
-                            });
-                        }}
-                      />
-                      <Label r#for="finished" class="font-medium">
-                        {"Finished Games"}
-                      </Label>
-                    </div>
-
-                    <div class="flex items-center space-x-2">
-                      <Checkbox
-                        id="ongoing"
-                        checked={query_state.ongoing.unwrap_or_default()}
-                        onchange={
-                            let query_state = query_state.clone();
-                            move |e: bool| {
-                            query_state.set(external::LichessGameQuery {
-                                ongoing: Some(e),
-                                ..(*query_state).clone()
-                            });
-                        }}
-                      />
-                      <Label r#for="ongoing" class="font-medium">
-                      {"Ongoing Games"}
-                      </Label>
-                    </div>
-
-                    <div class="grid gap-2">
-                      <Label r#for="sort" class="font-medium">
-                      {"Sort Order"}
-                      <span class="text-red-500">{"*"}</span>
-                      </Label>
-                      <Select::<external::LichessSort> id="sort">
-                        <SelectTrigger::<external::LichessSort> label="choose sort order"/>
-                        <SelectContent::<external::LichessSort>>
-                            <SelectItem::<external::LichessSort> value={external::LichessSort::Ascending} />
-                            <SelectItem::<external::LichessSort> value={external::LichessSort::Descending} />
-                        </SelectContent::<external::LichessSort>>
-                      </Select::<external::LichessSort>>
-                    </div>
-                  </div>
                 </div>
 
-                <Button r#type={ButtonType::Submit} class="w-full">
-                {"Generate Query"}
-                </Button>
-                <Button
-                    r#type={ButtonType::Reset}
-                    variant={ButtonVariant::Outline}
-                    class="w-full">
-                {"Clear"}
-                </Button>
-                <Button
-                    r#type={ButtonType::Reset}
-                    variant={ButtonVariant::Destructive}
-                    class="w-full">
-                {"Clear"}
-                </Button>
+                <div class="w-full flex gap-2">
+                    <Button
+                        r#type={ButtonType::Reset}
+                        variant={ButtonVariant::Outline}
+                        class="flex-1">
+                        {"Clear"}
+                    </Button>
+                    <Button r#type={ButtonType::Submit} class="flex-1">
+                        {"Generate Query"}
+                    </Button>
+                </div>
               </Form>
             </CardContent>
     </Card>
@@ -418,8 +363,11 @@ pub fn external_search_form() -> Html {
                         keypair
                             .sign_note(&mut new_note)
                             .expect("Failed to sign note");
-                        let entry: rooky_core::idb::RookyGameEntry =
-                            new_note.try_into().expect("couldnt create note");
+                        let entry = rooky_core::idb::RookyGameEntry {
+                            id: new_note.id.clone().unwrap_or_default(),
+                            note: new_note,
+                            origin: rooky_core::idb::GameOrigin::Public,
+                        };
                         let Ok(_) = entry.save_to_store().await else {
                             web_sys::console::log_1(&"Failed to save note".into());
                             return;
@@ -436,54 +384,49 @@ pub fn external_search_form() -> Html {
               <CardDescription>{"Chess.com API can only retrieve a monthly archive of games."}</CardDescription>
             </CardHeader>
             <CardContent>
-            <Form {onsubmit} class="space-y-6">
-                <div class="space-y-4">
-                  <div class="grid gap-2">
-                    <Label r#for="username" class="font-medium">
-                        {"Username "}
-                      <span class="text-red-500">{"*"}</span>
-                    </Label>
-                    <Input
-                      id="username"
-                      name="username"
-                      placeholder="Chess.com username"
-                      required={true}
-                    />
-                  </div>
-
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="grid gap-2">
-                      <Label r#for="month-date" class="font-medium">
-                        {"Date"}
-                      </Label>
-                      <Input
-                          id="date"
-                          name="date"
-                          r#type={InputType::Month}
-                          placeholder="YYYY-MM"
+                <Form {onsubmit} class="space-y-6">
+                    <div class="space-y-4">
+                      <div class="grid gap-2">
+                        <Label r#for="username" class="font-medium">
+                            {"Username "}
+                          <span class="text-red-500">{"*"}</span>
+                        </Label>
+                        <Input
+                          id="username"
+                          name="username"
+                          placeholder="Chess.com username"
+                          required={true}
                         />
+                      </div>
+
+
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid gap-2">
+                          <Label r#for="month-date" class="font-medium">
+                            {"Date"}
+                          </Label>
+                          <Input
+                              id="date"
+                              name="date"
+                              r#type={InputType::Month}
+                              placeholder="YYYY-MM"
+                            />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-
-                <Button r#type={ButtonType::Submit} class="w-full">
-                    {"Generate Query"}
-                </Button>
-                <Button
-                    r#type={ButtonType::Reset}
-                    variant={ButtonVariant::Outline}
-                    class="w-full">
-                    {"Clear"}
-                </Button>
-                <Button
-                    r#type={ButtonType::Reset}
-                    variant={ButtonVariant::Destructive}
-                    class="w-full">
-                    {"Clear"}
-                </Button>
-              </Form>
+                    <div class="w-full flex gap-2">
+                        <Button
+                            r#type={ButtonType::Reset}
+                            variant={ButtonVariant::Outline}
+                            class="flex-1">
+                            {"Clear"}
+                        </Button>
+                        <Button r#type={ButtonType::Submit} class="flex-1">
+                            {"Generate Query"}
+                        </Button>
+                    </div>
+                </Form>
             </CardContent>
         </Card>
     }

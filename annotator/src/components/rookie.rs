@@ -1,4 +1,3 @@
-use shady_minions::ui::Card;
 use yew::prelude::*;
 
 #[function_component(RookieAnnotation)]
@@ -87,7 +86,7 @@ pub fn rookie_annotation() -> Html {
     };
     let next_from_square_html = if let Some(square) = next_from_square.as_ref() {
         html! {
-            <h3 class="text-center size-8 p-2 text-lg font-bold ">
+            <h3 class="text-center size-8 p-2 text-lg font-bold text-muted">
                 { format!("{:?}", square) }
             </h3>
         }
@@ -98,7 +97,7 @@ pub fn rookie_annotation() -> Html {
     let move_html = if let Some(mv) = next_move.as_ref() {
         let san_move = shakmaty::san::SanPlus::from_move(game_ctx.last_game_position(), mv);
         html! {
-            <h3 class="text-center size-8 p-2 text-lg font-bold ">
+            <h3 class="text-center size-8 p-2 text-lg font-bold text-muted">
                 { format!("{san_move}") }
             </h3>
         }
@@ -107,7 +106,7 @@ pub fn rookie_annotation() -> Html {
     };
     let header_html = match next_role.as_ref() {
         Some(_) => html! {
-            <div class="w-full flex gap-3 items-center">
+            <div class="w-full flex gap-3 items-center max-w-sm">
                 // Back button
                 {back_option}
                 // Preview Information Card
@@ -119,12 +118,12 @@ pub fn rookie_annotation() -> Html {
                                 {role_html}
                             </div>
 
-                            <div class="text-center items-center justify-between flex flex-col">
+                            <div class="text-center items-center flex flex-col">
                                 <label class="text-xs font-medium text-foreground block">{"From Square"}</label>
                                 {next_from_square_html}
                             </div>
 
-                            <div class="text-center items-center justify-between flex flex-col">
+                            <div class="text-center items-center flex flex-col">
                                 <label class="text-xs font-medium text-foreground block">{"Move"}</label>
                                 {move_html}
                             </div>
@@ -148,9 +147,9 @@ pub fn rookie_annotation() -> Html {
             {header_html}
 
             // Main Content Area
-            <Card class="p-3 min-w-sm border-background">
+            <shady_minions::ui::Card class="p-3 min-w-xs w-full max-w-sm">
                 {inner_html}
-            </Card>
+            </shady_minions::ui::Card>
             // Play Move Button
             {if next_role.is_some() {
                 html! {
@@ -221,23 +220,23 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
     );
 
     html! {
-        <shady_minions::ui::Button
+        <button
             class={classes!(
                 if can_be_moved {
                     match game_ctx.color_turn() {
-                        shakmaty::Color::White => "bg-white hover:text-white",
-                        shakmaty::Color::Black => "bg-zinc-900",
+                        shakmaty::Color::White => "bg-white hover:bg-secondary",
+                        shakmaty::Color::Black => "bg-black hover:bg-secondary",
                     }
                 } else {
-                    "bg-zinc-200"
+                    "bg-muted"
                 },
                 if can_be_moved {
                     match game_ctx.color_turn() {
-                        shakmaty::Color::White => "text-zinc-900",
+                        shakmaty::Color::White => "text-black/100",
                         shakmaty::Color::Black => "text-white",
                     }
                 } else {
-                    "text-zinc-400"
+                    "text-muted"
                 },
                 "p-6",
                 "rounded",
@@ -247,6 +246,7 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
                 "flex",
                 "items-center",
                 "justify-center",
+                "font-semibold",
                 "flex-col",
                 if can_be_moved {
                     "cursor-pointer"
@@ -273,7 +273,6 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
                         "opacity-30"
                     },
                     "rounded-full",
-                    "bg-white/20",
                     "size-12",
                     "object-cover")}
             />
@@ -287,7 +286,7 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
                 shakmaty::Role::King => language_ctx.t("pieces_king"),
             } }
             </span>
-        </shady_minions::ui::Button>
+        </button>
     }
 }
 
@@ -379,7 +378,7 @@ pub fn from_square_selection(props: &FromSquareSelectionProps) -> Html {
         );
     }
     html! {
-        <div ref={board_ref} id={board_id} class="w-full aspect-square" />
+        <div ref={board_ref} id={board_id} class="w-full max-w-sm aspect-square" />
     }
 }
 
@@ -488,15 +487,15 @@ pub fn multi_squares_preview(props: &MultiSquaresPreviewProps) -> Html {
                             let style = square_ele.style();
                             if let Some(next_move) = next_move.as_ref() {
                                 if next_move.to() == *to_sq {
-                                    let _ = style
-                                        .set_property("background-color", "rgba(0, 255, 0, 0.5)");
+                                    let _ =
+                                        style.set_property("background-color", "hsl(74, 88%, 48%)");
                                 } else {
                                     let _ = style
-                                        .set_property("background-color", "rgba(0, 0, 255, 0.5)");
+                                        .set_property("background-color", "hsl(247, 95%, 45%)");
                                 }
                             } else {
                                 let _ =
-                                    style.set_property("background-color", "rgba(0, 0, 255, 0.5)");
+                                    style.set_property("background-color", "hsl(247, 95%, 45%)");
                             }
                             if let Some(m) = moves.iter().find(|m| m.to() == *to_sq) {
                                 let on_select = on_select.clone();
@@ -519,7 +518,7 @@ pub fn multi_squares_preview(props: &MultiSquaresPreviewProps) -> Html {
         );
     }
     html! {
-        <div ref={board_ref} id={board_id} class="w-full aspect-square" />
+        <div ref={board_ref} id={board_id} class="w-full max-w-sm aspect-square" />
     }
 }
 
@@ -553,7 +552,7 @@ pub fn play_move_button(props: &PlayMoveButtonProps) -> Html {
     };
     html! {
         <shady_minions::ui::Button
-                class="w-full"
+                class="w-full max-w-sm mx-auto"
                 variant={if next_move.is_some() {
                     shady_minions::ui::ButtonVariant::Normal
                 } else {

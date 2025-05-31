@@ -1,6 +1,6 @@
 [workspace]
 resolver="2"
-members = [ "annotator","bunker", "rooky-core", "chessboard-js", "external"]
+members = [ "annotator", "bunker", "rooky-core", "chessboard-js", "external"]
 exclude = ["shady-minions"]
 
 [workspace.dependencies]
@@ -20,7 +20,5 @@ wasm-streams = "0.4.2"
 web-sys = { version = "0.3.77", features = ["Window", "Response"] }
 wasm-bindgen-futures = "0.4.50"
 
-
-# nostr-minions = { path = "../../illuminodes/minions" }
-nostr-minions = { version = "0.1.17", features = ["uploads", "toastify", "leaflet"] }
+nostr-minions = { version = "0.1.18", features = ["uploads", "toastify", "leaflet"] }
 
