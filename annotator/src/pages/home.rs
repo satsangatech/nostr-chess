@@ -1,9 +1,10 @@
 use crate::components::UserProfileCard;
 use crate::router::AnnotatorRoute;
 use shady_minions::ui::{
-    Button, Card, CardContent, CardHeader, CardTitle, Input, LeftDrawer, Switch, Tabs, TabsContent,
-    TabsList, TabsTrigger,
+    Button, Card, CardContent, CardHeader, CardTitle, Input, LeftDrawer, Modal, Select,
+    SelectContent, SelectItem, SelectTrigger, Switch, Tabs, TabsContent, TabsList, TabsTrigger,
 };
+
 use wasm_bindgen::JsCast;
 use web_sys::MouseEvent;
 use yew::prelude::*;
@@ -12,14 +13,27 @@ use yew_router::prelude::*;
 #[function_component(HomePage)]
 pub fn home_page() -> Html {
     let config_ctx = crate::configs::use_annotator_config();
+    let outcome_open = use_state(|| false);
     html! {
         <>
             <Tabs default_value={config_ctx.experience_level.as_ref().to_string()}
                 class="flex flex-col w-full">
                 <HomeHeader />
                 <div class="flex-1 p-3 pb-6 flex flex-col">
-                    <MoveList />
-                    <div class="h-[0.5px] bg-muted my-3 w-full max-w-xs rounded-lg mx-auto" />
+                    <div class="flex gap-1 h-fit w-full items-center max-w-sm mx-auto">
+                        <MoveList />
+                        <Button
+                            onclick={
+                                let outcome_open = outcome_open.clone();
+                                Callback::from(move |_: MouseEvent| {
+                                    outcome_open.set(!*outcome_open);
+                                })
+                            }
+                            class="bg-transparent">
+                            <lucide_yew::Handshake class="size-8" />
+                        </Button>
+                    </div>
+                    <div class="h-[0.5px] bg-muted my-3 w-full max-w-sm rounded-lg mx-auto" />
                     <TabsContent
                         class="flex flex-col justify-between"
                         value={crate::configs::ExperienceLevel::Rookie.as_ref()}>
@@ -32,14 +46,89 @@ pub fn home_page() -> Html {
                     </TabsContent>
                 </div>
             </Tabs>
+            <Modal is_open={outcome_open} >
+                <OutcomeForm />
+            </Modal>
         </>
+    }
+}
+
+const OUTCOMES: [shakmaty::Outcome; 3] = [
+    shakmaty::Outcome::Draw,
+    shakmaty::Outcome::Decisive {
+        winner: shakmaty::Color::White,
+    },
+    shakmaty::Outcome::Decisive {
+        winner: shakmaty::Color::Black,
+    },
+];
+#[function_component(OutcomeForm)]
+pub fn outcome_form() -> Html {
+    let game_ctx = crate::live_game::use_annotated_game();
+    let language_ctx = crate::contexts::language::use_language_ctx();
+    let outcome_state = use_state(|| shakmaty::Outcome::Draw);
+    let navigator = use_navigator().unwrap();
+
+    html! {
+        <Card class="w-full max-w-sm">
+            <CardHeader>
+                <CardTitle>
+                    { language_ctx.t("common_outcome") }
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <shady_minions::ui::Form
+                    class="space-y-4"
+                    onsubmit={{
+                        let game_ctx = game_ctx.clone();
+                        let outcome_state = outcome_state.clone();
+                        let navigator = navigator.clone();
+                        Callback::from(move |_: web_sys::HtmlFormElement| {
+                            game_ctx.dispatch(crate::live_game::AnnotatedGameAction::AddOutcome(
+                                *outcome_state,
+                            ));
+                            navigator.push(&AnnotatorRoute::Review);
+
+                        })
+                    }}
+                >
+                    <Select::<shakmaty::Outcome>
+                        name="outcome"
+                        onchange={{
+                            let outcome_state = outcome_state.setter();
+                            Callback::from(move |value: Option<shakmaty::Outcome>| {
+                                if let Some(outcome) = value {
+                                    outcome_state.set(outcome);
+                                }
+                            })
+                        }}
+                        >
+                        <SelectTrigger::<shakmaty::Outcome> class="w-full" />
+                        <SelectContent::<shakmaty::Outcome>>
+                            { for OUTCOMES.iter().map(|outcome| {
+                                html! {
+                                    <SelectItem::<shakmaty::Outcome> value={*outcome} />
+                                }
+                            }) }
+                        </SelectContent::<shakmaty::Outcome>>
+                    </Select::<shakmaty::Outcome>>
+
+                    <shady_minions::ui::Button
+                        r#type={shady_minions::ui::ButtonType::Submit}
+                        class="w-full mt-4"
+                    >
+                        { language_ctx.t("common_save") }
+                    </shady_minions::ui::Button>
+                </shady_minions::ui::Form>
+            </CardContent>
+        </Card>
     }
 }
 
 #[function_component(HomeHeader)]
 pub fn home_header() -> Html {
     html! {
-        <header class="flex justify-between items-center p-3">
+        <header class="flex justify-between items-center p-3 gap-2 w-full max-w-sm mx-auto">
             <SettingsDrawer />
             <ExperienceSelector />
             <GameDetailsModal />
@@ -50,6 +139,7 @@ pub fn home_header() -> Html {
 #[function_component(SettingsDrawer)]
 pub fn settings_drawer() -> Html {
     let is_open = use_state(|| false);
+    let pubkey = nostr_minions::key_manager::use_nostr_pubkey();
     let onclick = {
         let is_open = is_open.clone();
         Callback::from(move |_: MouseEvent| {
@@ -94,28 +184,58 @@ pub fn settings_drawer() -> Html {
 
     html! {
         <>
-            <Button {onclick} class="bg-transparent">
+            <Button {onclick}
+                variant={shady_minions::ui::ButtonVariant::Outline}
+                size={shady_minions::ui::ButtonSize::Small}>
                 <lucide_yew::Menu class="size-4" />
             </Button>
             <LeftDrawer {is_open} >
-                <h3 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">{language_ctx.t("common_settings")}</h3>
+                <h3 class="text-lg sm:text-xl font-semibold text-foreground mb-6">{language_ctx.t("common_settings")}</h3>
                 <div class="space-y-4 w-full">
                     // User profile card section
+                    <div class="flex flex-col gap-1">
+                        <Button
+                            onclick={go_to_key_recovery}
+                            variant={shady_minions::ui::ButtonVariant::Outline}
+                        >
+                            <lucide_yew::Key class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 flex-shrink-0 text-secondary" />
+                            <span class="font-medium truncate">{ language_ctx.t("settings_key_recovery") }</span>
+                        </Button>
+
+                        <Button
+                            onclick={go_to_relay_management}
+                            variant={shady_minions::ui::ButtonVariant::Outline}
+                        >
+                            <lucide_yew::Wifi class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 flex-shrink-0 text-secondary" />
+                            <span class="font-medium truncate">{"Relay Management"}</span>
+                        </Button>
+                    </div>
+                    <div class="border border-secondary w-full max-w-sm mx-auto my-6" />
                     <UserProfileCard />
+                    <div class="rounded-lg shadow-sm">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center overflow-hidden">
+                                <lucide_yew::KeyRound class="size-4 min-w-4 min-h-4 mr-2 text-secondary" />
+                                <span class="text-sm sm:text-base font-medium text-muted truncate">{pubkey.unwrap_or_default()}</span>
+                            </div>
+                            <lucide_yew::Copy class="size-4 min-w-4 min-h-4 mr-2 text-secondary" />
+                        </div>
+                    </div>
                     // Relay Status Section
-                    <div class="rounded-lg bg-slate-50 p-3 sm:p-4 shadow-sm">
+                    <div class="rounded-lg shadow-sm">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
-                                <lucide_yew::Wifi class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-primary" />
-                                <span class="text-sm sm:text-base font-medium">{"Relay Status"}</span>
+                                <lucide_yew::Wifi class="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-secondary" />
+                                <span class="text-sm sm:text-base font-medium text-muted ">{"Relay Status"}</span>
                             </div>
                             <RelayStatusIcon />
                         </div>
                     </div>
+                    <div class="border border-secondary w-full max-w-sm mx-auto my-6" />
 
-                    <div class="rounded-lg bg-slate-50 p-3 sm:p-4 shadow-sm">
+                    <div class="rounded-lg shadow-sm">
                         <div class="mb-1.5 sm:mb-2">
-                            <label class="text-sm sm:text-base font-medium block mb-0.5 sm:mb-1">
+                            <label class="text-sm sm:text-base font-medium block mb-0.5 sm:mb-1 text-muted">
                                 { language_ctx.t("settings_default_level") }
                             </label>
                             <p class="text-xs sm:text-sm text-muted-foreground">
@@ -125,7 +245,7 @@ pub fn settings_drawer() -> Html {
                         <div class="mt-2">
                             <div class="flex items-center justify-between px-1">
                                 <div class="flex items-center">
-                                    <span class="text-sm font-medium mr-2 sm:mr-3">{ language_ctx.t("common_rookie") }</span>
+                                    <span class="text-sm font-medium mr-2 sm:mr-3 text-muted">{ language_ctx.t("common_rookie") }</span>
                                     <Switch
                                         checked={is_expert}
                                         onchange={
@@ -140,14 +260,14 @@ pub fn settings_drawer() -> Html {
                                         }
                                     />
                                 </div>
-                                <span class="text-sm font-medium ml-2 sm:ml-3">{ language_ctx.t("common_expert") }</span>
+                                <span class="text-sm font-medium ml-2 sm:ml-3 text-muted">{ language_ctx.t("common_expert") }</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="rounded-lg bg-slate-50 p-3 sm:p-4 shadow-sm">
+                    <div class="rounded-lg shadow-sm">
                         <div class="mb-1.5 sm:mb-2">
-                            <label class="text-sm sm:text-base font-medium block mb-0.5 sm:mb-1">
+                            <label class="text-sm sm:text-base font-medium block mb-0.5 sm:mb-1 text-muted">
                                 { language_ctx.t("settings_default_orientation") }
                             </label>
                             <p class="text-xs sm:text-sm text-muted-foreground">
@@ -157,7 +277,7 @@ pub fn settings_drawer() -> Html {
                         <div class="mt-2">
                             <div class="flex items-center justify-between px-1">
                                 <div class="flex items-center">
-                                    <span class="text-sm font-medium mr-2 sm:mr-3">{ language_ctx.t("common_white") }</span>
+                                    <span class="text-sm font-medium mr-2 sm:mr-3 text-muted">{ language_ctx.t("common_white") }</span>
                                     <Switch
                                         checked={config_ctx.playing_as == crate::contexts::configs::BoardPlayingSide::Black}
                                         onchange={
@@ -172,28 +292,10 @@ pub fn settings_drawer() -> Html {
                                         }
                                     />
                                 </div>
-                                <span class="text-sm font-medium ml-2 sm:ml-3">{ language_ctx.t("common_black") }</span>
+                                <span class="text-sm font-medium ml-2 sm:ml-3 text-muted">{ language_ctx.t("common_black") }</span>
                             </div>
                         </div>
                     </div>
-
-                    <Button
-                        onclick={go_to_key_recovery}
-                        class="w-full flex items-center justify-start py-2 px-3 sm:py-3 sm:px-4 h-auto bg-slate-100 border border-slate-200 text-sm sm:text-base shadow-sm break-words"
-                        variant={shady_minions::ui::ButtonVariant::Outline}
-                    >
-                        <lucide_yew::Key class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 flex-shrink-0 text-primary" />
-                        <span class="font-medium truncate">{ language_ctx.t("settings_key_recovery") }</span>
-                    </Button>
-
-                    <Button
-                        onclick={go_to_relay_management}
-                        class="w-full flex items-center justify-start py-2 px-3 sm:py-3 sm:px-4 h-auto bg-slate-100 border border-slate-200 text-sm sm:text-base shadow-sm break-words"
-                        variant={shady_minions::ui::ButtonVariant::Outline}
-                    >
-                        <lucide_yew::Wifi class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 flex-shrink-0 text-primary" />
-                        <span class="font-medium truncate">{"Relay Management"}</span>
-                    </Button>
                 </div>
             </LeftDrawer>
         </>
@@ -218,7 +320,6 @@ pub fn experience_selector() -> Html {
     }
 }
 
-use shady_minions::ui::Modal;
 #[function_component(GameDetailsModal)]
 pub fn game_details_modal() -> Html {
     let game_ctx = crate::live_game::use_annotated_game();
@@ -255,7 +356,9 @@ pub fn game_details_modal() -> Html {
 
     html! {
         <>
-            <Button onclick={close_on_click} class="bg-transparent">
+            <Button onclick={close_on_click}
+                variant={shady_minions::ui::ButtonVariant::Outline}
+                size={shady_minions::ui::ButtonSize::Small}>
                 <lucide_yew::SquarePen class="size-4" />
             </Button>
             <Modal {is_open}>
@@ -495,15 +598,15 @@ pub fn move_list() -> Html {
                 };
 
                 let black_class = if is_last_chunk && black_move.is_some() {
-                    "text-lg font-semibold"
+                    "text-lg font-semibold text-muted"
                 } else {
-                    "text-sm"
+                    "text-sm, text-muted"
                 };
 
                 html! {
                     <div class="inline-flex items-center">
                         <span class="text-secondary-foreground mr-1 text-sm">{ format!("{}.", move_number) }</span>
-                        <span class={classes!(white_class, "mr-1")}>{ white_move.to_string() }</span>
+                        <span class={classes!(white_class, "mr-1", "text-muted")}>{ white_move.to_string() }</span>
                         { if let Some(black_move) = black_move {
                             html! { <span class={black_class}>{ black_move.to_string() }</span> }
                         } else {

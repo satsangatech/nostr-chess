@@ -210,6 +210,7 @@ dependencies = [
  "rooky-core",
  "serde",
  "serde-wasm-bindgen 0.6.5",
+ "serde_json",
  "shady-minions",
  "shakmaty",
  "wasm-bindgen-test",
@@ -1313,18 +1314,16 @@ checksum = "2bf50223579dc7cdcfb3bfcacf7069ff68243f8c363f62ffa99cf000a6b9c451"
 
 [[package]]
 name = "nostr-minions"
-version = "0.1.17"
+version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7677eeae8560162dbabfc6482f112ba5bbb852e6ce52c2f8e3e5ea43724f4f59"
+checksum = "c7595ddcbf2beed9680416c9b8b8f986b4753439c8035d392f53396c33586086"
 dependencies = [
- "gloo 0.11.0",
  "lucide-yew",
  "nostro2",
  "nostro2-signer",
  "serde",
  "serde-wasm-bindgen 0.6.5",
  "serde_json",
- "tokio",
  "upload-things",
  "uuid",
  "wasm-bindgen",
@@ -1949,18 +1948,6 @@ checksum = "75ef51a33ef1da925cea3e4eb122833cb377c61439ca401b770f54902b806779"
 dependencies = [
  "backtrace",
  "pin-project-lite",
- "tokio-macros",
-]
-
-[[package]]
-name = "tokio-macros"
-version = "2.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e06d43f1345a3bcd39f6a56dbb7dcab2ba47e68e8ac134855e7e2bdbaf8cab8"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
 ]
 
 [[package]]

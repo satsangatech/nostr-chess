@@ -3,37 +3,44 @@
 @source "../../shady-minions/src/**";
 
 :root {
-  --background: hsl(40, 30%, 95%);            /* warm ivory */
-  --foreground: hsl(30, 20%, 10%);            /* deep brown, classic */
-  --primary: hsl(0, 0%, 15%);                 /* rich black - chess piece color */
-  --primary-foreground: hsl(0, 0%, 100%);     /* white */
-  --secondary: hsl(30, 20%, 70%);             /* light wood tone */
-  --secondary-foreground: hsl(30, 30%, 20%);  /* darker wood for contrast */
-  --destructive: hsl(0, 80%, 55%);            /* calm red for alerts */
-  --muted: hsl(40, 30%, 90%);                 /* muted ivory */
-  --muted-foreground: hsl(30, 15%, 35%);      /* subtle warm gray */
-  --accent: hsl(140, 30%, 40%);               /* deep green – elegant highlight */
-  --accent-foreground: hsl(140, 20%, 90%);    /* pale greenish-beige */
-  --border: hsl(30, 15%, 80%);                /* soft brown-gray */
-  --input: hsl(30, 15%, 92%);                 /* light ivory input background */
-  --ring: hsl(30, 15%, 75%);                  /* warm gray ring */
+
+    --background: hsl(60, 2%, 12%);        
+    --foreground: hsl(0, 0%, 100%);           
+    --primary: hsl(247, 95%, 45%);            
+    --primary-foreground: hsl(0, 0%, 100%);
+
+    --secondary: hsl(74, 88%, 48%);         
+    --secondary-foreground: hsl(0, 0%, 73%);  
+    --destructive: hsl(0, 80%, 55%);          
+
+    --muted: hsl(0, 0%, 73%);                 
+    --muted-foreground: hsl(0, 0%, 38%);      
+    --accent: hsl(120, 2%, 18%);              
+    --accent-foreground: hsl(140, 20%, 90%);  
+
+    --border: hsl(60, 2%, 12%);
+    --input: hsl(0, 0%, 73%);
+    --ring: hsl(120, 2%, 18%);                 
 }
 
 .dark {
-  --background: hsl(30, 15%, 8%);             /* almost-black with warm tint */
-  --foreground: hsl(40, 25%, 90%);            /* light beige text */
-  --primary: hsl(0, 0%, 90%);                 /* classic white piece */
-  --primary-foreground: hsl(0, 0%, 10%);      /* black foreground on white */
-  --secondary: hsl(30, 20%, 25%);             /* dark wood tone */
-  --secondary-foreground: hsl(30, 20%, 85%);  /* soft beige contrast */
-  --destructive: hsl(0, 60%, 50%);            /* alert red */
-  --muted: hsl(30, 10%, 25%);                 /* muted brown-gray */
-  --muted-foreground: hsl(30, 10%, 65%);      /* soft warm gray */
-  --accent: hsl(140, 25%, 55%);               /* muted green */
-  --accent-foreground: hsl(140, 25%, 15%);    /* dark green contrast */
-  --border: hsl(30, 10%, 30%);                /* dark warm border */
-  --input: hsl(30, 10%, 20%);                 /* input bg blend */
-  --ring: hsl(30, 10%, 50%);                  /* warm gray ring */
+    --background: hsl(60, 2%, 12%);        
+    --foreground: hsl(0, 0%, 100%);           
+    --primary: hsl(247, 95%, 45%);            
+    --primary-foreground: hsl(0, 0%, 100%);
+
+    --secondary: hsl(74, 88%, 48%);         
+    --secondary-foreground: hsl(0, 0%, 73%);  
+    --destructive: hsl(0, 80%, 55%);          
+
+    --muted: hsl(0, 0%, 73%);                 
+    --muted-foreground: hsl(0, 0%, 38%);      
+    --accent: hsl(120, 2%, 18%);              
+    --accent-foreground: hsl(140, 20%, 90%);  
+
+    --border: hsl(0, 0%, 73%);
+    --input: hsl(0, 0%, 73%);
+    --ring: hsl(120, 2%, 18%);                 
 }
 
 @theme inline {
@@ -53,5 +60,18 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
 }
+
+@theme {
+  --animate-loading-bar: fade-in-scale 1s ease-in-out infinite;
+  @keyframes fade-in-scale {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(200%);
+    }
+  }
+}
+
 
 

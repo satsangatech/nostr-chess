@@ -46,6 +46,7 @@ pub enum AnnotatedGameAction {
     FinishedLoading,
     Reset,
     PlayMove(shakmaty::Move),
+    AddOutcome(shakmaty::Outcome),
     AddWhiteName(String),
     AddBlackName(String),
     ChangeDate(chrono::NaiveDate),
@@ -70,6 +71,14 @@ impl Reducible for AnnotatedGame {
                 pgn_game: rooky_core::RookyGame::default(),
                 ..(*self).clone()
             }),
+            AnnotatedGameAction::AddOutcome(outcome) => {
+                let mut pgn_game = self.pgn_game.clone();
+                pgn_game = pgn_game.add_result(outcome);
+                Rc::new(Self {
+                    pgn_game,
+                    ..(*self).clone()
+                })
+            }
             AnnotatedGameAction::PlayMove(mv) => {
                 let game_position = self.game_positions.last().cloned().unwrap_or_default();
                 let Ok(new_position) = game_position.clone().play(&mv) else {
@@ -142,6 +151,15 @@ pub fn key_handler(props: &AnnotatedGameChildren) -> Html {
         has_loaded: true,
         game_positions: vec![shakmaty::Chess::new()],
         pgn_game,
+    });
+
+    let navigator = yew_router::hooks::use_navigator().expect("Navigator not found");
+    use_effect_with(ctx.clone(), move |game| {
+        if let Some(outcome) = game.last_game_position().outcome() {
+            game.dispatch(crate::live_game::AnnotatedGameAction::AddOutcome(outcome));
+            navigator.push(&crate::router::AnnotatorRoute::Review);
+        }
+        || {}
     });
 
     html! {

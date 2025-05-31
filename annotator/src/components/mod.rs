@@ -36,6 +36,7 @@ pub fn share_rooky_game(props: &RookyGameProps) -> Html {
                 .sign_note(&mut game_note)
                 .expect("Failed to sign note");
             let game_entry = rooky_core::idb::RookyGameEntry {
+                id: game_note.id.clone().unwrap_or_default(),
                 note: game_note.clone(),
                 origin: rooky_core::idb::GameOrigin::Annotated,
             };
@@ -81,6 +82,7 @@ pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
             };
             let note: nostr_minions::nostro2::NostrNote = game.clone().into();
             let note_entry = rooky_core::idb::RookyGameEntry {
+                id: note.id.clone().unwrap_or_default(),
                 note: note.clone(),
                 origin: rooky_core::idb::GameOrigin::Annotated,
             };
@@ -98,12 +100,13 @@ pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
     };
 
     html! {
+        <Button>
         <Popover>
             <PopoverTrigger>
-                <Button>
+                <div class="flex items-center gap-2">
                     <lucide_yew::MessageSquareLock class={classes!("size-5")} />
                     <span class="ml-2">{ language_ctx.t("share_send_dm") }</span>
-                </Button>
+                </div>
             </PopoverTrigger>
             <PopoverContent>
                 <Form {onsubmit} class="flex gap-2">
@@ -116,8 +119,9 @@ pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
                         <lucide_yew::MessageSquareLock class={classes!("size-5")} />
                     </Button>
                 </Form>
-            </PopoverContent>
+                </PopoverContent>
         </Popover>
+        </Button>
     }
 }
 
@@ -133,6 +137,7 @@ pub fn save_txt_rooky_game(props: &RookyGameProps) -> Html {
         Callback::from(move |_| {
             let note: nostr_minions::nostro2::NostrNote = game.clone().into();
             let note_entry = rooky_core::idb::RookyGameEntry {
+                id: note.id.clone().unwrap_or_default(),
                 note: note.clone(),
                 origin: rooky_core::idb::GameOrigin::Annotated,
             };

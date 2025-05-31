@@ -5,26 +5,30 @@ use yew::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct AnnotatedGameHistory {
-    loaded: bool,
-    synced: bool,
+    pub synced: bool,
     pgn_games: Vec<rooky_core::idb::RookyGameEntry>,
+    unread: Vec<rooky_core::idb::RookyGameEntry>,
 }
 
 impl AnnotatedGameHistory {
     #[must_use]
-    pub const fn loaded(&self) -> bool {
-        self.loaded
+    pub fn rooky_game_entries(&self) -> Vec<rooky_core::idb::RookyGameEntry> {
+        self.pgn_games.clone()
     }
     #[must_use]
-    pub fn rooky_games(&self) -> Vec<rooky_core::idb::RookyGameEntry> {
-        self.pgn_games.clone()
+    pub fn unread_games(&self) -> Vec<rooky_core::idb::RookyGameEntry> {
+        self.unread.clone()
+    }
+    #[must_use]
+    pub fn has_unread(&self) -> bool {
+        !self.unread.is_empty()
     }
 }
 pub enum AnnotatedGameHistoryAction {
-    Loaded,
     Synced,
     LoadGames(Vec<rooky_core::idb::RookyGameEntry>),
     AddGame(rooky_core::idb::RookyGameEntry),
+    AddReceivedGame(rooky_core::idb::RookyGameEntry),
 }
 
 impl Reducible for AnnotatedGameHistory {
@@ -32,24 +36,29 @@ impl Reducible for AnnotatedGameHistory {
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         match action {
-            AnnotatedGameHistoryAction::Loaded => Rc::new(Self {
-                loaded: true,
-                ..(*self).clone()
-            }),
             AnnotatedGameHistoryAction::Synced => Rc::new(Self {
                 synced: true,
                 ..(*self).clone()
             }),
             AnnotatedGameHistoryAction::LoadGames(games) => Rc::new(Self {
-                loaded: true,
                 pgn_games: games,
                 ..(*self).clone()
             }),
+            AnnotatedGameHistoryAction::AddReceivedGame(game) => {
+                let mut pgn_games = self.pgn_games.clone();
+                let mut unread = self.unread.clone();
+                unread.push(game.clone());
+                pgn_games.push(game);
+                Rc::new(Self {
+                    pgn_games,
+                    unread,
+                    ..(*self).clone()
+                })
+            }
             AnnotatedGameHistoryAction::AddGame(game) => {
                 let mut pgn_games = self.pgn_games.clone();
                 pgn_games.push(game);
                 Rc::new(Self {
-                    loaded: true,
                     pgn_games,
                     ..(*self).clone()
                 })
@@ -66,30 +75,41 @@ pub struct AnnotatedGameHistoryChildren {
 }
 
 #[function_component(AnnotatedGameHistoryProvider)]
-pub fn key_handler(props: &AnnotatedGameHistoryChildren) -> Html {
-    let ctx = use_reducer_eq(AnnotatedGameHistory::default);
+pub fn key_handler(props: &AnnotatedGameHistoryChildren) -> HtmlResult {
     let relay_ctx = use_context::<nostr_minions::relay_pool::NostrRelayPoolStore>()
         .expect("Relay context not found");
     let user_id = nostr_minions::key_manager::use_nostr_key();
     let last_sync = nostr_minions::use_last_sync_time();
     let sub_id = use_state(|| None);
-    {
-        let dispatcher = ctx.dispatcher();
-        use_effect_with((), move |()| {
-            let dispatcher = dispatcher.clone();
-            yew::platform::spawn_local(async move {
-                if let Ok(games) = rooky_core::idb::RookyGameEntry::retrieve_all_from_store().await
-                {
-                    web_sys::console::log_1(&"Loaded".into());
-                    dispatcher.dispatch(AnnotatedGameHistoryAction::LoadGames(games));
-                    return;
-                }
-                web_sys::console::log_1(&"Loaded Empty".into());
-                dispatcher.dispatch(AnnotatedGameHistoryAction::Loaded);
-            });
-            || ()
-        });
-    }
+    let games = yew::suspense::use_future_with((), |_| async move {
+        if let Ok(games) = rooky_core::idb::RookyGameEntry::retrieve_all_from_store().await {
+            return games;
+        }
+        vec![]
+    })?;
+    let ctx = use_reducer(|| AnnotatedGameHistory {
+        synced: false,
+        pgn_games: (*games).clone(),
+        unread: vec![],
+    });
+
+    // {
+    //     let dispatcher = ctx.dispatcher();
+    //     use_effect_with((), move |()| {
+    //         let dispatcher = dispatcher.clone();
+    //         yew::platform::spawn_local(async move {
+    //             if let Ok(games) = rooky_core::idb::RookyGameEntry::retrieve_all_from_store().await
+    //             {
+    //                 web_sys::console::log_1(&"Loaded".into());
+    //                 dispatcher.dispatch(AnnotatedGameHistoryAction::LoadGames(games));
+    //                 return;
+    //             }
+    //             web_sys::console::log_1(&"Loaded Empty".into());
+    //             dispatcher.dispatch(AnnotatedGameHistoryAction::Loaded);
+    //         });
+    //         || ()
+    //     });
+    // }
     {
         let relay_ctx = relay_ctx.clone();
         let sub_id = sub_id.clone();
@@ -115,6 +135,15 @@ pub fn key_handler(props: &AnnotatedGameHistoryChildren) -> Html {
         });
     }
     {
+        let ctx = ctx.dispatcher();
+        use_effect_with(relay_ctx.clone(), move |relay| {
+            if relay.relay_health().is_empty() {
+                ctx.dispatch(AnnotatedGameHistoryAction::Synced);
+            }
+            || {}
+        });
+    }
+    {
         let dispatcher = ctx.dispatcher();
         let set_id = sub_id.clone();
         use_effect_with(relay_ctx.relay_events.clone(), move |notes| {
@@ -123,7 +152,7 @@ pub fn key_handler(props: &AnnotatedGameHistoryChildren) -> Html {
             {
                 if Some(sub_id) == set_id.as_ref() {
                     web_sys::console::log_1(&"Synced".into());
-                    dispatcher.dispatch(AnnotatedGameHistoryAction::Loaded);
+                    dispatcher.dispatch(AnnotatedGameHistoryAction::Synced);
                 }
             }
             || {}
@@ -132,38 +161,41 @@ pub fn key_handler(props: &AnnotatedGameHistoryChildren) -> Html {
     {
         let dispatcher = ctx.dispatcher();
         use_effect_with(relay_ctx.unique_notes.clone(), move |notes| {
-            if let Some(note) = notes.last().cloned() {
-                web_sys::console::log_1(&"Note".into());
-                if let Some(user_id) = user_id.as_ref() {
-                    if let Ok(dm_note) = user_id.extract_rumor(&note) {
-                        if let Ok(_pgn_game) = rooky_core::RookyGame::try_from(dm_note.clone()) {
-                            web_sys::console::log_1(&"PGN Game".into());
-                            let entry = rooky_core::idb::RookyGameEntry {
-                                note: dm_note,
-                                origin: rooky_core::idb::GameOrigin::Received,
-                            };
-                            yew::platform::spawn_local(async move {
-                                if entry.clone().save_to_store().await.is_ok() {
-                                    web_sys::console::log_1(&"Saved".into());
-                                    nostr_minions::LastSyncTime::new_sync_time()
-                                        .await
-                                        .expect("Failed to save sync time");
-                                    dispatcher.dispatch(AnnotatedGameHistoryAction::AddGame(entry));
-                                } else {
-                                    web_sys::console::log_1(&"Failed to save".into());
-                                }
-                            });
-                        }
-                    }
-                }
-            };
+            user_id.as_ref().and_then(|user_id| {
+                let note = notes.last().cloned()?;
+                let dm_note = user_id.extract_rumor(&note).ok()?;
+                rooky_core::RookyGame::try_from(dm_note.clone())
+                    .ok()
+                    .map(|_| {
+                        let entry = rooky_core::idb::RookyGameEntry {
+                            id: dm_note.id.clone().unwrap_or_default(),
+                            note: dm_note,
+                            origin: rooky_core::idb::GameOrigin::Received,
+                        };
+                        yew::platform::spawn_local(async move {
+                            if entry.clone().save_to_store().await.is_err() {
+                                web_sys::console::log_1(&"Failed to save".into());
+                                return;
+                            }
+                            if nostr_minions::LastSyncTime::new_sync_time().await.is_ok() {
+                                dispatcher
+                                    .dispatch(AnnotatedGameHistoryAction::AddReceivedGame(entry));
+                            }
+                        });
+                    })
+            });
             || {}
         });
     }
 
-    html! {
+    Ok(html! {
         <ContextProvider<AnnotatedGameHistoryStore> context={ctx}>
             {props.children.clone()}
         </ContextProvider<AnnotatedGameHistoryStore>>
-    }
+    })
+}
+
+#[hook]
+pub fn use_game_history() -> AnnotatedGameHistoryStore {
+    use_context::<AnnotatedGameHistoryStore>().expect("AnnotatedGameHistoryStore context not set")
 }

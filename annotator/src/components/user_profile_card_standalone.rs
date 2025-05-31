@@ -1,36 +1,29 @@
 use crate::contexts::user_metadata::use_user_metadata_ctx;
-use crate::router::AnnotatorRoute;
-use shady_minions::ui::Button;
 use yew::prelude::*;
-use yew_router::prelude::*;
 
 /// A profile card component that uses the UserMetadataProvider context
 #[function_component(UserProfileCard)]
 pub fn user_profile_card() -> Html {
     // Get contexts needed
     let language_ctx = crate::contexts::language::use_language_ctx();
-    let navigator = use_navigator().expect("Navigator not available");
+    // let navigator = use_navigator().expect("Navigator not available");
     let user_metadata_store = use_user_metadata_ctx();
 
     // Getting metadata from the central store - no local state needed
     let metadata = user_metadata_store.get_metadata();
 
-    web_sys::console::log_1(
-        &format!("Rendering profile card with metadata: {:?}", metadata).into(),
-    );
-
     // On edit button click
-    let onclick = {
-        let navigator = navigator.clone();
-        Callback::from(move |_| {
-            navigator.push(&AnnotatorRoute::Profile);
-        })
-    };
+    // let onclick = {
+    //     let navigator = navigator.clone();
+    //     Callback::from(move |_| {
+    //         navigator.push(&AnnotatorRoute::Profile);
+    //     })
+    // };
 
     html! {
-        <div class="rounded-lg bg-slate-50 p-3 xs:p-4 shadow-sm">
+        <div class="rounded-lg shadow-sm space-y-1">
             <div class="mb-2 xs:mb-3">
-                <h3 class="text-base xs:text-lg font-semibold text-primary mb-0.5 xs:mb-1">
+                <h3 class="text-base xs:text-lg font-semibold text-muted mb-0.5 xs:mb-1">
                     { language_ctx.t("profile_title") }
                 </h3>
                 <p class="text-xs xs:text-sm text-muted-foreground">
@@ -48,7 +41,7 @@ pub fn user_profile_card() -> Html {
                     />
                 </div>
                 <div class="flex-grow min-w-0">
-                    <p class="font-medium text-sm xs:text-base truncate">
+                    <p class="font-medium text-sm xs:text-base truncate text-muted">
                         {metadata.as_ref().map(|p| p.name.clone()).unwrap_or_else(|| language_ctx.t("anonymous_user"))}
                     </p>
                     <p class="text-xs xs:text-sm text-muted-foreground truncate italic">
@@ -57,14 +50,14 @@ pub fn user_profile_card() -> Html {
                 </div>
             </div>
 
-            <Button
-                {onclick}
-                variant={shady_minions::ui::ButtonVariant::Outline}
-                class="w-full text-sm xs:text-base"
-            >
-                <lucide_yew::Pen class="size-4 mr-2" />
-                { language_ctx.t("edit_profile") }
-            </Button>
+            // <Button
+            //     {onclick}
+            //     variant={shady_minions::ui::ButtonVariant::Outline}
+            //     class="w-full text-sm xs:text-base"
+            // >
+            //     <lucide_yew::Pen class="size-4 mr-2" />
+            //     { language_ctx.t("edit_profile") }
+            // </Button>
         </div>
     }
 }

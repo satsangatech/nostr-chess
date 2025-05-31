@@ -11,6 +11,8 @@ pub enum AnnotatorRoute {
     RelaySettings,
     #[at("/profile")]
     Profile,
+    #[at("/review")]
+    Review,
 }
 
 #[function_component(AnnotatorRouter)]
@@ -22,6 +24,7 @@ pub fn annotator_router() -> Html {
                 AnnotatorRoute::KeySettings => html! { <crate::KeyRecoveryPage /> },
                 AnnotatorRoute::RelaySettings => html! { <crate::RelayManagementPage /> },
                 AnnotatorRoute::Profile => html! { <crate::ProfilePage /> },
+                AnnotatorRoute::Review => html! { <crate::ReviewPage /> },
             }}}
         />
 

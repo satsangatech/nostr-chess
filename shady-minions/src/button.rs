@@ -93,6 +93,7 @@ pub fn button(props: &ButtonProps) -> Html {
         "items-center",
         "justify-center",
         "whitespace-nowrap",
+        "cursor-pointer",
         "font-medium",
         "transition-colors",
         "focus-visible:outline-none",

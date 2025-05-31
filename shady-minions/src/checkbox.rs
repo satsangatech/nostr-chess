@@ -6,7 +6,7 @@ pub struct CheckboxProps {
     pub id: Option<String>,
     #[prop_or_default]
     pub checked: bool,
-    #[prop_or_default]
+    #[prop_or(false)]
     pub disabled: bool,
     #[prop_or_default]
     pub required: bool,

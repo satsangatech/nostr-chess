@@ -1,3 +1,9 @@
+mod notifications;
+mod profile;
+pub use notifications::*;
+pub use profile::*;
+
+use nostr_minions::browser_api::IdbStoreManager;
 use shady_minions::ui::{
     Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Form, Input, Popover,
     PopoverContent, PopoverTrigger,
@@ -13,10 +19,9 @@ pub struct JsChessGameProps {
 
 #[function_component(JsChessGame)]
 pub fn js_chess_game(props: &JsChessGameProps) -> Html {
+    let game_context = crate::live_game::use_game_history();
     let board_ref = use_node_ref();
-    web_sys::console::log_1(&"JsChessGame".into());
 
-    let pgn_moves = props.game.moves.clone();
     let route = yew_router::hooks::use_route::<crate::MainRoute>();
     let game_id = route
         .clone()
@@ -25,9 +30,6 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
             _ => None,
         })
         .unwrap_or_default();
-    let date = props.game.date;
-    let white_name = props.game.white.clone();
-    let black_name = props.game.black.clone();
     let positions = props.game.game_positions();
     let game_board = use_mut_ref(|| None);
     let current_position = use_mut_ref(|| 0);
@@ -36,13 +38,16 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
     {
         let board_setting = game_board.clone();
         let game_id = game_id.clone();
-        use_effect_with((), move |()| {
-            let board_options = chessboard_js::ChessboardConfig {
-                draggable: false,
-                ..Default::default()
-            };
-            let board = chessboard_js::ChessBoardJs::new(&game_id, Some(board_options));
-            *board_setting.borrow_mut() = Some(board);
+        use_effect_with(game_context.synced, move |synced| {
+            if *synced {
+                let board_options = chessboard_js::ChessboardConfig {
+                    draggable: false,
+                    piece_theme: "/public/img/pieces/{piece}.svg",
+                    ..Default::default()
+                };
+                let board = chessboard_js::ChessBoardJs::new(&game_id, Some(board_options));
+                *board_setting.borrow_mut() = Some(board);
+            }
             || {}
         });
     }
@@ -126,69 +131,48 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
     }
 
     html! {
-        <div class="flex gap-4 size-full">
-            <div class="flex flex-col gap-2 size-fit">
-                <div ref={board_ref} id={game_id.clone()} class="min-w-md flex-1" />
-                <div class="flex">
-                    <Button
-                        class="flex-1"
-                        onclick={Callback::from(move |_| {
-                            prev_move_onclick.emit(());
-                        })}>
-                        {"Previous Move"}
-                    </Button>
-                    <Button
-                        class="flex-1"
-                        onclick={Callback::from(move |_| {
-                            next_move_onclick.emit(());
-                        })}>
-                        {"Next Move"}
-                    </Button>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 gap-4">
-                <Card class="size-fit">
-                <CardHeader>
-                    <CardTitle>{ format!("{} vs {}", white_name, black_name) }</CardTitle>
-                    <CardDescription class="max-w-xs truncate">
-                        <br />
-                        { format!("Date: {}", date.format("%Y-%m-%d")) }
-                        <br />
-                        { format!("Game ID: {}", game_id) }
-                        <br />
-                        { format!("Event: {}", props.game.event) }
-                        <br />
-                        { format!("Result: {}", props.game.outcome) }
-                        <br />
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                <div class="text-sm text-gray-500 flex flex-wrap gap-1 max-w-sm">
-                    {pgn_moves.iter().enumerate().map(|(i, move_text)| {
-                        let turn = i / 2;
-                        let is_white = i % 2 == 0;
-                        let turn_number = turn + 1;
-                        let is_current = *current_index > 0 && i == *current_index - 1;
-
-                        html! {
-                            <span class={classes!("inline-flex", "items-center", "whitespace-nowrap", "mr-1", if is_current { "font-bold" } else { "" })}>
-                                {
-                                    if is_white {
-                                        html! { <span class="mr-0.5">{ format!("{turn_number}.", ) }</span> }
-                                    } else {
-                                        html! {}
-                                    }
-                                }
-                                <span>{ move_text.to_string() }</span>
-                            </span>
-                        }
-                    }).collect::<Html>()}
-                </div>
-                </CardContent>
+        <>
+                <Card class="h-fit min-w-lg w-full max-w-2xl">
+                    <CardHeader>
+                        <CardTitle >
+                            <div ref={board_ref} id={game_id} class="w-full aspect-square" />
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent class="flex gap-4">
+                        <Button
+                            class="flex-1"
+                            onclick={Callback::from(move |_| {
+                                prev_move_onclick.emit(());
+                            })}>
+                            {"Previous Move"}
+                        </Button>
+                        <Button
+                            class="flex-1"
+                            onclick={Callback::from(move |_| {
+                                next_move_onclick.emit(());
+                            })}>
+                            {"Next Move"}
+                        </Button>
+                    </CardContent>
                 </Card>
-                <ShareRookyGameCard ..props.clone() />
-            </div>
-        </div>
+                <Card class="h-full min-w-sm max-w-sm max-h-180 overflow-hidden">
+                    <CardHeader>
+                        <CardTitle class="mb-8">
+                            <div class="flex justify-between items-top">
+                                <h3 class="text-2xl font-bold text-white">
+                                    {"Game Info"}
+                                </h3>
+                            </div>
+                        </CardTitle>
+                    </CardHeader>
+                    <GameCard pgn_game={props.game.clone()}  />
+                    <div class="flex flex-col gap-2 p-6">
+                        <ShareRookyGame ..props.clone() />
+                        <DirectMessageRookyGame ..props.clone() />
+                        <SaveTxtRookyGame ..props.clone() />
+                    </div>
+                </Card>
+        </>
     }
 }
 
@@ -212,11 +196,11 @@ pub fn share_rooky_game_card(props: &JsChessGameProps) -> Html {
     }
 }
 
-use nostr_minions::browser_api::IdbStoreManager;
 #[function_component(ShareRookyGame)]
 pub fn share_rooky_game(props: &JsChessGameProps) -> Html {
     let relay_ctx = use_context::<nostr_minions::relay_pool::NostrRelayPoolStore>()
         .expect("Relay context not found");
+    let game_ctx = crate::live_game::use_game_history();
     let Some(keypair) = nostr_minions::key_manager::use_nostr_key() else {
         return html! {
             <lucide_yew::Share2 class={classes!("size-5", "bg-muted", "text-muted-foreground")} />
@@ -226,22 +210,39 @@ pub fn share_rooky_game(props: &JsChessGameProps) -> Html {
         let keypair = keypair.clone();
         let game = props.game.clone();
         let relay_ctx = relay_ctx.clone();
+        let game_ctx = game_ctx.dispatcher();
         Callback::from(move |_| {
             let mut game_note: nostr_minions::nostro2::NostrNote = game.clone().into();
-            keypair
-                .sign_note(&mut game_note)
-                .expect("Failed to sign note");
+            if keypair.sign_note(&mut game_note).is_err() {
+                web_sys::console::error_1(&"Failed to sign note".into());
+                nostr_minions::widgets::toastify::ToastifyOptions::new_failure(
+                    "Failed to sign note",
+                )
+                .show();
+                return;
+            }
             let game_entry = rooky_core::idb::RookyGameEntry {
+                id: game_note.id.clone().unwrap_or_default(),
                 note: game_note.clone(),
                 origin: rooky_core::idb::GameOrigin::Annotated,
             };
+            game_ctx.dispatch(crate::live_game::AnnotatedGameHistoryAction::AddGame(
+                game_entry.clone(),
+            ));
             yew::platform::spawn_local(async move {
-                game_entry
-                    .save_to_store()
-                    .await
-                    .expect("Failed to save game");
+                if game_entry.save_to_store().await.is_err() {
+                    web_sys::console::error_1(&"Failed to save game".into());
+                    nostr_minions::widgets::toastify::ToastifyOptions::new_failure(
+                        "Failed to save game",
+                    )
+                    .show();
+                }
             });
             relay_ctx.send(game_note);
+            nostr_minions::widgets::toastify::ToastifyOptions::new_success(
+                "Game shared successfully",
+            )
+            .show();
         })
     };
 
@@ -258,6 +259,7 @@ use nostr_minions::nostro2_signer::nostro2_nips::Nip17;
 pub fn dm_rooky_game(props: &JsChessGameProps) -> Html {
     let relay_ctx = use_context::<nostr_minions::relay_pool::NostrRelayPoolStore>()
         .expect("Relay context not found");
+    let game_ctx = crate::live_game::use_game_history();
     let Some(keypair) = nostr_minions::key_manager::use_nostr_key() else {
         return html! {
             <lucide_yew::Share2 class={classes!("size-5", "bg-muted", "text-muted-foreground")} />
@@ -267,6 +269,7 @@ pub fn dm_rooky_game(props: &JsChessGameProps) -> Html {
         let keypair = keypair.clone();
         let game = props.game.clone();
         let relay_ctx = relay_ctx.clone();
+        let game_ctx = game_ctx.dispatcher();
         Callback::from(move |form: web_sys::HtmlFormElement| {
             let Some(recipient) = form
                 .get_with_name("recipient")
@@ -274,34 +277,50 @@ pub fn dm_rooky_game(props: &JsChessGameProps) -> Html {
                 .map(|input| input.value())
             else {
                 web_sys::console::log_1(&"Recipient not found".into());
+                nostr_minions::widgets::toastify::ToastifyOptions::new_failure(
+                    "Recipient not found",
+                )
+                .show();
                 return;
             };
             let mut note = game.clone().into();
-            keypair.sign_note(&mut note).expect("Failed to sign note");
+            if keypair.sign_note(&mut note).is_err() {
+                web_sys::console::error_1(&"Failed to sign note".into());
+                nostr_minions::widgets::toastify::ToastifyOptions::new_failure(
+                    "Failed to sign note",
+                )
+                .show();
+                return;
+            }
             let note_entry = rooky_core::idb::RookyGameEntry {
+                id: note.id.clone().unwrap_or_default(),
                 note: note.clone(),
                 origin: rooky_core::idb::GameOrigin::Annotated,
             };
-            yew::platform::spawn_local(async move {
-                note_entry
-                    .save_to_store()
-                    .await
-                    .expect("Failed to save game");
-            });
-            let dm_game = keypair
-                .private_dm(&game.to_pgn(), &recipient)
-                .expect("Failed to sign note");
-            relay_ctx.send(dm_game);
+            if let Ok(dm_game) = keypair.private_dm(&game.to_pgn(), &recipient) {
+                relay_ctx.send(dm_game);
+                game_ctx.dispatch(crate::live_game::AnnotatedGameHistoryAction::AddGame(
+                    note_entry.clone(),
+                ));
+            } else {
+                web_sys::console::error_1(&"Failed to send DM".into());
+                nostr_minions::widgets::toastify::ToastifyOptions::new_failure("Failed to send DM")
+                    .show();
+                return;
+            }
+            nostr_minions::widgets::toastify::ToastifyOptions::new_success("DM sent successfully")
+                .show();
         })
     };
 
     html! {
+        <Button>
         <Popover>
             <PopoverTrigger>
-                <Button>
-                    <lucide_yew::MessageSquareLock class={classes!("size-5")} />
-                    <span class="ml-2">{"Send Nostr DM"}</span>
-                </Button>
+                <div class="flex items-center gap-2">
+                <lucide_yew::MessageSquareLock class={classes!("size-5")} />
+                <span class="ml-2">{"Send Nostr DM"}</span>
+                </div>
             </PopoverTrigger>
             <PopoverContent>
                 <Form {onsubmit} class="flex gap-2">
@@ -314,31 +333,157 @@ pub fn dm_rooky_game(props: &JsChessGameProps) -> Html {
                         <lucide_yew::MessageSquareLock class={classes!("size-5")} />
                     </Button>
                 </Form>
-            </PopoverContent>
+                </PopoverContent>
         </Popover>
+        </Button>
+    }
+}
+
+#[derive(Properties, PartialEq)]
+pub struct GameCardProps {
+    pub pgn_game: rooky_core::RookyGame,
+}
+
+#[function_component(GameCard)]
+pub fn game_card(props: &GameCardProps) -> Html {
+    let rooky_core::RookyGame {
+        event,
+        outcome,
+        moves,
+        white,
+        black,
+        date,
+        site,
+        round,
+    } = &props.pgn_game;
+
+    // Check if it's a casual game
+    let is_casual_game = event == &rooky_core::pgn_standards::PgnEvent::Casual;
+    let white_name = if white.is_empty() {
+        "White".to_string()
+    } else {
+        white.clone()
+    };
+    let black_name = if black.is_empty() {
+        "Black".to_string()
+    } else {
+        black.clone()
+    };
+
+    html! {
+            <>
+                <div class="w-full space-y-2">
+                    <h3 class="text-lg font-bold text-white">
+                        { format!("{white_name} vs {black_name}") }
+                    </h3>
+                    <div class="flex justify-between text-white">
+                        <span class="text-sm font-bold">{ "Date" }</span>
+                        <span class="text-sm">{ date.format("%Y-%m-%d").to_string() }</span>
+                    </div>
+                    <div class="flex justify-between text-white">
+                        <span class="text-sm font-bold">{ "Result" }</span>
+                        <span class="text-sm">{ outcome.to_string() }</span>
+                    </div>
+                    <div class="flex justify-between text-white">
+                        <span class="text-sm font-bold">{ "Event" }</span>
+                        <span class="text-sm">{ event.to_string() }</span>
+                    </div>
+                    {if !is_casual_game {
+                        html! {
+                            <>
+                            <div class="flex justify-between text-white">
+                                <span class="text-sm font-bold">{ "Site" }</span>
+                                <span class="text-sm">{ site.to_string() }</span>
+                            </div>
+                            <div class="flex justify-between text-white">
+                                <span class="text-sm font-bold">{ "Round" }</span>
+                                <span class="text-sm">{ round.to_string() }</span>
+                            </div>
+                            </>
+                        }
+                    } else { html! {}}}
+                </div>
+                <div id="separator" class="h-[0.5px] bg-secondary my-4" />
+                <div class="text-sm text-white flex flex-wrap gap-2 max-h-18 overflow-y-auto">
+                    {
+                        moves.iter().enumerate().map(|(i, move_text)| {
+                            let turn = i / 2;
+                            let is_white = i % 2 == 0;
+                            let turn_number = turn + 1;
+
+                            html! {
+                                <span class={classes!("inline-flex", "items-center", "whitespace-nowrap")}>
+                                    {
+                                        if is_white {
+                                            html! {
+                                                <span class="mr-2 text-secondary text-xs">
+                                                    { format!("{}.", turn_number) }
+                                                </span>
+                                            }
+                                        } else {
+                                            html! {}
+                                        }
+                                    }
+                                    <span>{ move_text.to_string() }</span>
+                                </span>
+                            }
+                        }).collect::<Html>()
+                    }
+                </div>
+                <div id="separator" class="h-[0.5px] bg-secondary my-4" />
+            </>
     }
 }
 
 #[function_component(SaveTxtRookyGame)]
 pub fn save_txt_rooky_game(props: &JsChessGameProps) -> Html {
+    use nostr_minions::browser_api::IdbStoreManager;
     let game = props.game.clone();
-    let mut note: nostr_minions::nostro2::NostrNote = game.clone().into();
-    note.serialize_id().expect("Failed to serialize ID");
+    let game_context = crate::live_game::use_game_history();
+    let keypair = nostr_minions::key_manager::use_nostr_key();
     let onclick = {
         let game = game.clone();
-        let id = note.id.take().unwrap();
+        let keypair = keypair.clone();
         Callback::from(move |_| {
-            let note = game.clone().into();
+            let mut note = game.clone().into();
+            if let Some(keypair) = keypair.as_ref() {
+                if keypair.sign_note(&mut note).is_err() {
+                    nostr_minions::widgets::toastify::ToastifyOptions::new_failure(
+                        "Failed to sign note",
+                    )
+                    .show();
+                    return;
+                }
+            } else {
+                nostr_minions::widgets::toastify::ToastifyOptions::new_failure(
+                    "No Nostr keypair found",
+                )
+                .show();
+                return;
+            }
+            let id = note.id.clone().unwrap_or_default();
             let note_entry = rooky_core::idb::RookyGameEntry {
+                id: id.clone(),
                 note,
                 origin: rooky_core::idb::GameOrigin::Annotated,
             };
+            let note_entry_clone = note_entry.clone();
             yew::platform::spawn_local(async move {
-                note_entry
+                note_entry_clone
                     .save_to_store()
                     .await
-                    .expect("Failed to save game");
+                    .unwrap_or_else(|err| {
+                        web_sys::console::error_1(&format!("Failed to save game: {err:#?}").into());
+
+                        nostr_minions::widgets::toastify::ToastifyOptions::new_failure(
+                            "Failed to save game",
+                        )
+                        .show();
+                    });
             });
+            game_context.dispatch(crate::live_game::AnnotatedGameHistoryAction::AddGame(
+                note_entry,
+            ));
             let blob_parts = web_sys::js_sys::Array::new();
             blob_parts.push(&web_sys::wasm_bindgen::JsValue::from_str(&game.to_pgn()));
             let blob = web_sys::Blob::new_with_str_sequence(&blob_parts).unwrap();
@@ -356,6 +501,10 @@ pub fn save_txt_rooky_game(props: &JsChessGameProps) -> Html {
             a.dispatch_event(&web_sys::MouseEvent::new("click").unwrap())
                 .unwrap();
             web_sys::Url::revoke_object_url(&url).unwrap();
+            nostr_minions::widgets::toastify::ToastifyOptions::new_success(
+                "Game saved successfully",
+            )
+            .show();
         })
     };
 

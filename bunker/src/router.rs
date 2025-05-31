@@ -49,10 +49,13 @@ pub fn main_panel(props: &MainPanelProps) -> Html {
                         <crate::pages::GamesPage />
                     </div>
                     <div class={if matches!(props.route, MainRoute::Settings) { showing_class } else { hidden_class }}>
-                        <h2 class="text-2xl font-bold mb-4">{"Settings"}</h2>
+                        <div class="flex gap-4 size-full items-center justify-evenly">
+                            <crate::pages::RelayManagementPage />
+                            <crate::pages::KeyRecoveryPage />
+                        </div>
                     </div>
                     <div class={if matches!(props.route, MainRoute::NewGame) { showing_class } else { hidden_class }}>
-                            <crate::pages::NewJsChessGame />
+                        <crate::pages::NewJsChessGame />
                     </div>
                     {if let MainRoute::GameDetail { id } = props.route.clone() {
                         html! {
