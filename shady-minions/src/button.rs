@@ -14,6 +14,7 @@ pub enum ButtonSize {
     Large,
     #[default]
     Regular,
+    Icon,
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub enum ButtonType {
@@ -86,6 +87,7 @@ pub fn button(props: &ButtonProps) -> Html {
         ButtonSize::Small => ["h-9", "rounded-md", "px-3"].as_slice(),
         ButtonSize::Large => ["h-11", "rounded-md", "px-8"].as_slice(),
         ButtonSize::Regular => ["h-10", "px-4", "py-2", "rounded-md"].as_slice(),
+        ButtonSize::Icon => ["size-9", "p-2", "rounded-md"].as_slice(),
     };
 
     let classes = classes!(

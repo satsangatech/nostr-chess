@@ -25,7 +25,7 @@ pub fn left_drawer(props: &LeftDrawerProps) -> Html {
         "z-50",
         "h-full",
         "w-fit",
-        "max-w-3/5",
+        "max-w-3/4",
         "md:max-w-1/3",
         "transform",
         "bg-background",

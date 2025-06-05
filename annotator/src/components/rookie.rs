@@ -36,18 +36,18 @@ pub fn rookie_annotation() -> Html {
     let back_option = match (next_role.as_ref(), next_from_square.as_ref()) {
         (Some(_), Some(_)) => html! {
             <shady_minions::ui::Button
-                class="align-self-start"
+                size={shady_minions::ui::ButtonSize::Icon}
                 onclick={clear_from_square}>
                 <lucide_yew::ArrowLeft
-                    class="size-5" />
+                    class="size-6" />
             </shady_minions::ui::Button>
         },
         (Some(_), None) => html! {
             <shady_minions::ui::Button
-                class="align-self-start"
+                size={shady_minions::ui::ButtonSize::Icon}
                 onclick={clear_role}>
                 <lucide_yew::ArrowLeft
-                    class="size-5" />
+                    class="size-6" />
             </shady_minions::ui::Button>
         },
         _ => html! {
@@ -79,14 +79,14 @@ pub fn rookie_annotation() -> Html {
             <img
                 src={src}
                 alt={format!("{:?}", role)}
-                class="p-2 rounded-full size-12 object-cover" />
+                class="p-2 rounded-full size-8 object-cover" />
         }
     } else {
         html! {}
     };
     let next_from_square_html = if let Some(square) = next_from_square.as_ref() {
         html! {
-            <h3 class="text-center size-8 p-2 text-lg font-bold text-muted">
+            <h3 class="text-center size-6 p-1 font-bold text-muted">
                 { format!("{:?}", square) }
             </h3>
         }
@@ -97,7 +97,7 @@ pub fn rookie_annotation() -> Html {
     let move_html = if let Some(mv) = next_move.as_ref() {
         let san_move = shakmaty::san::SanPlus::from_move(game_ctx.last_game_position(), mv);
         html! {
-            <h3 class="text-center size-8 p-2 text-lg font-bold text-muted">
+            <h3 class="text-center size-6 p-1 font-bold text-muted">
                 { format!("{san_move}") }
             </h3>
         }
@@ -159,11 +159,13 @@ pub fn rookie_annotation() -> Html {
                         next_from_square={next_from_square.clone()} />
                 }
             } else {
-                html! {}
+                html! {
+                }
             }}
         </div>
     }
 }
+
 #[derive(Properties, PartialEq)]
 pub struct PieceSelectionProps {
     pub next_role: UseStateHandle<Option<shakmaty::Role>>,
@@ -179,7 +181,7 @@ pub fn piece_selection(props: &PieceSelectionProps) -> Html {
     };
 
     html! {
-        <div class="grid grid-cols-2 gap-2 w-full justify-center align-center items-center place-items-center">
+        <div class="grid grid-cols-2 gap-3 w-full justify-center align-center items-center place-items-center">
             <PieceSelector
                 piece={shakmaty::Role::Pawn}
                 onclick={set_role.clone()} />
@@ -238,11 +240,11 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
                 } else {
                     "text-muted"
                 },
-                "p-6",
+                "p-4",
                 "rounded",
                 "aspect-square",
-                "min-h-32",
-                "min-w-32",
+                "min-h-28",
+                "min-w-28",
                 "flex",
                 "items-center",
                 "justify-center",
@@ -273,7 +275,7 @@ pub fn piece_selector(props: &PieceSelectorProps) -> Html {
                         "opacity-30"
                     },
                     "rounded-full",
-                    "size-12",
+                    "size-8",
                     "object-cover")}
             />
             <span class="text-sm text-center mt-2">
@@ -378,7 +380,7 @@ pub fn from_square_selection(props: &FromSquareSelectionProps) -> Html {
         );
     }
     html! {
-        <div ref={board_ref} id={board_id} class="w-full max-w-sm aspect-square" />
+        <div ref={board_ref} id={board_id} class="h-[35vh] sm:h-[45vh] aspect-square mx-auto" />
     }
 }
 
@@ -518,7 +520,7 @@ pub fn multi_squares_preview(props: &MultiSquaresPreviewProps) -> Html {
         );
     }
     html! {
-        <div ref={board_ref} id={board_id} class="w-full max-w-sm aspect-square" />
+        <div ref={board_ref} id={board_id} class="h-[35vh] sm:h-[45vh] aspect-square mx-auto" />
     }
 }
 

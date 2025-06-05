@@ -46,6 +46,7 @@ pub enum AnnotatedGameAction {
     FinishedLoading,
     Reset,
     PlayMove(shakmaty::Move),
+    TakeBack,
     AddOutcome(shakmaty::Outcome),
     AddWhiteName(String),
     AddBlackName(String),
@@ -75,6 +76,17 @@ impl Reducible for AnnotatedGame {
                 let mut pgn_game = self.pgn_game.clone();
                 pgn_game = pgn_game.add_result(outcome);
                 Rc::new(Self {
+                    pgn_game,
+                    ..(*self).clone()
+                })
+            }
+            AnnotatedGameAction::TakeBack => {
+                let mut game_positions = self.game_positions.clone();
+                let _ = game_positions.pop();
+                let mut pgn_game = self.pgn_game.clone();
+                let _ = pgn_game.take_back();
+                Rc::new(Self {
+                    game_positions,
                     pgn_game,
                     ..(*self).clone()
                 })
