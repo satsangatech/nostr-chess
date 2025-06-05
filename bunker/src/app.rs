@@ -80,7 +80,10 @@ fn app() -> HtmlResult {
 #[function_component(Navbar)]
 fn navbar() -> Html {
     let navbar_button_class = classes!(
-        "size-32",
+        "2xl:size-32",
+        "xl:size-28",
+        "lg:size-24",
+        "size-20",
         "flex",
         "items-center",
         "justify-center",
@@ -103,7 +106,7 @@ fn navbar() -> Html {
                     }
                     )}>
                     <img src="/public/img/splashscreen.svg"
-                         class={classes!("size-12", "rounded-full")} />
+                         class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12")} />
                     <span class={classes!("")}>{"Home"}</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>
@@ -116,7 +119,8 @@ fn navbar() -> Html {
                         "bg-zinc-800"
                     }
                     )}>
-                    <lucide_yew::Plus class={classes!("size-12")} />
+                    <lucide_yew::Plus
+                         class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12")} />
                     <span class={classes!("")}>{"Annotate"}</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>
@@ -129,7 +133,8 @@ fn navbar() -> Html {
                         "bg-zinc-800"
                     }
                     )}>
-                    <lucide_yew::BookOpen class={classes!("size-12")} />
+                    <lucide_yew::BookOpen
+                        class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12", )} />
                     <span class={classes!("")}>{"Repertoire"}</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>
@@ -142,7 +147,8 @@ fn navbar() -> Html {
                         "bg-zinc-800"
                     }
                     )}>
-                    <lucide_yew::Search class={classes!("size-12")} />
+                    <lucide_yew::Search
+                        class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12", )} />
                     <span class={classes!("")}>{"Search"}</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>
@@ -155,7 +161,8 @@ fn navbar() -> Html {
                         "bg-zinc-800"
                     }
                     )}>
-                    <lucide_yew::Cog class={classes!("size-12")} />
+                    <lucide_yew::Cog
+                        class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12", )} />
                     <span class={classes!("")}>{"Settings"}</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>

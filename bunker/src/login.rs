@@ -272,8 +272,8 @@ pub fn new_key_form() -> Html {
     html! {
         <Card>
             <CardHeader>
-                <CardTitle>{ "Nueva Llave" }</CardTitle>
-                <CardDescription class={classes!("flex-1", "text-primary-foreground")}>
+                <CardTitle>{ "New Key" }</CardTitle>
+                <CardDescription class={classes!("flex-1")}>
                     { r#"
                         This key is secret.
                         It cannot be recovered if lost.

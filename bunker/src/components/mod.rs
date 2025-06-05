@@ -132,10 +132,10 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
 
     html! {
         <>
-                <Card class="h-fit min-w-lg w-full max-w-2xl">
+                <Card class="h-fit w-fit">
                     <CardHeader>
                         <CardTitle >
-                            <div ref={board_ref} id={game_id} class="w-full aspect-square" />
+                            <div ref={board_ref} id={game_id} class="h-[66vh] aspect-square" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent class="flex gap-4">
@@ -155,7 +155,7 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
                         </Button>
                     </CardContent>
                 </Card>
-                <Card class="h-full min-w-sm max-w-sm max-h-180 overflow-hidden">
+                <Card class="h-fit min-w-sm  max-h-[86vh] overflow-hidden">
                     <CardHeader>
                         <CardTitle class="mb-8">
                             <div class="flex justify-between items-top">
@@ -165,12 +165,14 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
                             </div>
                         </CardTitle>
                     </CardHeader>
+                    <CardContent>
                     <GameCard pgn_game={props.game.clone()}  />
                     <div class="flex flex-col gap-2 p-6">
                         <ShareRookyGame ..props.clone() />
                         <DirectMessageRookyGame ..props.clone() />
                         <SaveTxtRookyGame ..props.clone() />
                     </div>
+                    </CardContent>
                 </Card>
         </>
     }

@@ -154,7 +154,7 @@ pub fn js_chess_game() -> Html {
         <div class="pl-12 h-full flex flex-col justify-evenly">
             <h2 class="text-4xl text-white font-black">{"New Game"}</h2>
             <div class="flex justify-evenly gap-6">
-                <Card class="h-full min-w-sm max-w-sm">
+                <Card class="h-fit min-w-sm  max-h-[86vh] overflow-hidden">
                     <CardHeader>
                         <CardTitle class="mb-8">
                             <div class="flex justify-between items-top">
@@ -170,9 +170,13 @@ pub fn js_chess_game() -> Html {
                         <ShareGameModal pgn_game={pgn_game.borrow().clone()} />
                     </CardContent>
                 </Card>
-                <div class="flex-1 flex justify-center items-start">
-                    <div ref={board_ref} id="game" class="w-full max-w-[42rem] aspect-square" />
-                </div>
+                <Card class="h-fit w-fit">
+                    <CardHeader>
+                    <div ref={board_ref} id="game" class="h-[66vh] aspect-square" />
+                    </CardHeader>
+                    <CardContent></CardContent>
+                </Card>
+
             </div>
         </div>
     }
