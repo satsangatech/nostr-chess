@@ -49,6 +49,7 @@ dependencies = [
  "shady-minions",
  "shakmaty",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "wasm-bindgen-test",
  "web-sys",
  "yew",

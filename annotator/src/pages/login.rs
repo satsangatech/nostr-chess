@@ -25,12 +25,12 @@ pub fn login_form() -> Html {
         })
     };
     html! {
-        <>
+        <div class="flex flex-col items-center justify-center min-h-screen px-6">
         <img
-            class={classes!("mb-4",  "mx-auto")}
-            src="public/img/logo_nombre.svg"
+            class={classes!("mb-4",  "mx-auto" , "size-48")}
+            src="public/assets/img/splashscreen.svg"
             alt="Login Logo" />
-        <Card class={classes!("max-w-sm", "min-w-sm")}>
+        <Card class={classes!()}>
             <CardHeader>
                 <CardTitle>{ language_ctx.t("login_title") }</CardTitle>
                 <CardDescription>{ language_ctx.t("login_subtitle") }</CardDescription>
@@ -72,7 +72,7 @@ pub fn login_form() -> Html {
         <Modal is_open={login_modal} >
             <LoginForm />
         </Modal>
-        </>
+        </div>
     }
 }
 
