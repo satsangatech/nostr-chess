@@ -31,7 +31,7 @@ pub fn login_form() -> Html {
         <Card class={classes!("max-w-sm", "min-w-sm")}>
             <CardHeader>
                 <CardTitle>{ "Chess Bunker" }</CardTitle>
-                <CardDescription>{ "Login to your safe data storage." }</CardDescription>
+                <CardDescription class="text-primary-foreground">{ "Login to your safe data storage." }</CardDescription>
             </CardHeader>
             <CardContent>
                 <Tabs default_value="register" class={classes!("w-full")}>
@@ -40,7 +40,7 @@ pub fn login_form() -> Html {
                         <TabsTrigger value="login">{ "Recover" }</TabsTrigger>
                     </TabsList>
                     <TabsContent value="register">
-                        <p class={classes!("text-sm", "text-muted-foreground")}>
+                        <p class={classes!("text-sm", "text-primary-foreground")}>
                             { "If you don't haev a key, you can generate a new one here." }
                         </p>
                         <Button
@@ -51,7 +51,7 @@ pub fn login_form() -> Html {
                         </Button>
                     </TabsContent>
                     <TabsContent value="login">
-                        <p class={classes!("text-sm", "text-muted-foreground")}>
+                        <p class={classes!("text-sm", "text-primary-foreground")}>
                             { "Recover your data from the cloud using your secret key." }
                         </p>
                         <Button
@@ -272,8 +272,8 @@ pub fn new_key_form() -> Html {
     html! {
         <Card>
             <CardHeader>
-                <CardTitle>{ "New Key" }</CardTitle>
-                <CardDescription class={classes!("flex-1")}>
+                <CardTitle>{ "Nueva Llave" }</CardTitle>
+                <CardDescription class={classes!("flex-1", "text-primary-foreground")}>
                     { r#"
                         This key is secret.
                         It cannot be recovered if lost.
@@ -289,24 +289,24 @@ pub fn new_key_form() -> Html {
                         <TabsTrigger value="hex-key">{ "Passkey" }</TabsTrigger>
                     </TabsList>
                     <TabsContent value="mnemonic" class={classes!("space-y-4")}>
-                        <p class={classes!("font-bold", "text-muted-foreground", "select-none", "pointer-events-none")}>
+                        <p class={classes!("font-bold", "text-primary-foreground", "select-none", "pointer-events-none")}>
                             { "Keep a physical copy of this phrase in a safe place." }
                         </p>
                         <div class={classes!("font-bold", "text-sm", "grid", "grid-cols-3", "gap-2")}>
                             { mnemonic.split_whitespace().enumerate().map(|(i, word)| {
                                 html! {
                                     <div class={classes!("text-center", "text-sm", "font-bold", "flex", "gap-1")}>
-                                        <p class={classes!("font-bold", "text-muted-foreground", "select-none", "pointer-events-none")}>
+                                        <p class={classes!("font-bold", "text-primary-foreground", "select-none", "pointer-events-none")}>
                                             { format!("{}. ", i + 1) }
                                         </p>
-                                        <p class={classes!("text-muted-foreground")}>{ format!("{word}") }</p>
+                                        <p class={classes!("text-primary-foreground")}>{ format!("{word}") }</p>
                                     </div>
                                 }
                             }).collect::<Html>() }
                         </div>
                     </TabsContent>
                     <TabsContent value="hex-key" class={classes!("space-y-4")}>
-                        <p class={classes!("font-bold", "text-muted-foreground", "select-none", "pointer-events-none")}>
+                        <p class={classes!("font-bold", "text-primary-foreground", "select-none", "pointer-events-none")}>
                             { "Save this key in your password manager." }
                         </p>
                         <div class={classes!("flex", "gap-2" , "items-center")}>
