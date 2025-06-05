@@ -8,7 +8,7 @@ pub fn review_page() -> Html {
 
     html! {
         <>
-        <div class="fixed top-4 left-4 ">
+        <div class="fixed top-8 left-8 ">
             <yew_router::components::Link<crate::router::AnnotatorRoute> to={crate::router::AnnotatorRoute::Home}>
                 <shady_minions::ui::Button
                     variant={shady_minions::ui::ButtonVariant::Outline}
@@ -18,7 +18,7 @@ pub fn review_page() -> Html {
                 </shady_minions::ui::Button>
             </yew_router::components::Link<crate::router::AnnotatorRoute>>
         </div>
-        <div class="h-full text-white p-4 max-w-sm mx-auto flex flex-col justify-between">
+        <div class="h-full text-white px-6 flex flex-col justify-between w-full">
             // Header
             <div>
             <div class="text-center mb-6">

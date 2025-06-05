@@ -13,6 +13,10 @@
     "common_close": "Close",
     "common_loading": "Loading...",
     "common_drawer": "Drawer",
+    "common_outcome": "Outcome",
+    "common_draw": "Draw",
+    "common_white_wins": "White Wins",
+    "common_black_wins": "Black Wins",
     "home_title": "Chess Annotator",
     "home_start_new_game": "Start New Game",
     "home_continue": "Continue",
@@ -78,6 +82,7 @@
     "annotation_pgn": "PGN",
     "annotation_copy_pgn": "Copy PGN",
     "annotation_download_pgn": "Download PGN",
+    "annotation_take_back": "Take Back",
     "share_via_nostr": "Share via Nostr",
     "share_via_dm": "Share via DM",
     "share_download": "Download",
@@ -131,6 +136,5 @@
     "no_bio": "No bio provided",
     "common_back": "Back",
     "profile_updated": "Profile updated successfully",
-
     "notification_copied_to_clipboard": "Copied to clipboard"
 }

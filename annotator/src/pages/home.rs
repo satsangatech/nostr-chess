@@ -17,10 +17,11 @@ pub fn home_page() -> Html {
     html! {
         <>
             <Tabs default_value={config_ctx.experience_level.as_ref().to_string()}
-                class="flex flex-col w-full">
+                class="flex flex-col w-full items-center">
                 <HomeHeader />
-                <div class="flex-1 p-3 pb-6 flex flex-col">
-                    <div class="flex gap-1 h-fit w-full items-center max-w-sm mx-auto">
+                <div class="flex-1 flex flex-col w-full px-6">
+                    <div class="flex gap-1 h-fit w-full items-center">
+                        <TakeBackButton />
                         <MoveList />
                         <Button
                             onclick={
@@ -29,11 +30,12 @@ pub fn home_page() -> Html {
                                     outcome_open.set(!*outcome_open);
                                 })
                             }
+                            size={shady_minions::ui::ButtonSize::Icon}
                             class="bg-transparent">
-                            <lucide_yew::Handshake class="size-8" />
+                            <lucide_yew::Handshake class="size-7" />
                         </Button>
                     </div>
-                    <div class="h-[0.5px] bg-muted my-3 w-full max-w-sm rounded-lg mx-auto" />
+                    <div class="h-[0.5px] bg-muted my-3 w-full px-3 sm:px-6 rounded-lg" />
                     <TabsContent
                         class="flex flex-col justify-between"
                         value={crate::configs::ExperienceLevel::Rookie.as_ref()}>
@@ -50,6 +52,30 @@ pub fn home_page() -> Html {
                 <OutcomeForm />
             </Modal>
         </>
+    }
+}
+
+#[function_component(TakeBackButton)]
+pub fn take_back_button() -> Html {
+    let game_ctx = crate::live_game::use_annotated_game();
+    let onclick = {
+        let game_ctx = game_ctx.clone();
+        Callback::from(move |_| {
+            game_ctx.dispatch(crate::live_game::AnnotatedGameAction::TakeBack);
+        })
+    };
+    html! {
+        <shady_minions::ui::Button
+            size={shady_minions::ui::ButtonSize::Icon}
+            class="bg-transparent"
+            // variant={shady_minions::ui::ButtonVariant::Normal}
+            {onclick}>
+            <lucide_yew::Undo2
+                class="size-7 text-destructive" />
+            // <span class="text-sm text-center">
+            //     { language_ctx.t("annotation_take_back") }
+            // </span>
+        </shady_minions::ui::Button>
     }
 }
 
@@ -107,7 +133,18 @@ pub fn outcome_form() -> Html {
                         <SelectContent::<shakmaty::Outcome>>
                             { for OUTCOMES.iter().map(|outcome| {
                                 html! {
-                                    <SelectItem::<shakmaty::Outcome> value={*outcome} />
+                                    <SelectItem::<shakmaty::Outcome> value={*outcome}
+                                        label={match *outcome {
+                                            shakmaty::Outcome::Draw => language_ctx.t("common_draw"),
+                                            shakmaty::Outcome::Decisive { winner } => {
+                                                if winner == shakmaty::Color::White {
+                                                    language_ctx.t("common_white_wins")
+                                                } else {
+                                                    language_ctx.t("common_black_wins")
+                                                }
+                                            }
+                                        }}
+                                    />
                                 }
                             }) }
                         </SelectContent::<shakmaty::Outcome>>
@@ -128,7 +165,7 @@ pub fn outcome_form() -> Html {
 #[function_component(HomeHeader)]
 pub fn home_header() -> Html {
     html! {
-        <header class="flex justify-between items-center p-3 gap-2 w-full max-w-sm mx-auto">
+        <header class="flex justify-between items-center px-6 gap-2 w-full mb-6">
             <SettingsDrawer />
             <ExperienceSelector />
             <GameDetailsModal />
@@ -186,28 +223,30 @@ pub fn settings_drawer() -> Html {
         <>
             <Button {onclick}
                 variant={shady_minions::ui::ButtonVariant::Outline}
-                size={shady_minions::ui::ButtonSize::Small}>
-                <lucide_yew::Menu class="size-4" />
+                size={shady_minions::ui::ButtonSize::Icon}>
+                <lucide_yew::Menu class="size-7" />
             </Button>
-            <LeftDrawer {is_open} >
-                <h3 class="text-lg sm:text-xl font-semibold text-foreground mb-6">{language_ctx.t("common_settings")}</h3>
-                <div class="space-y-4 w-full">
+            <LeftDrawer {is_open}  >
+                <h3 class="text-lg sm:text-xl font-semibold text-foreground my-6 ml-6">{language_ctx.t("common_settings")}</h3>
+                <div class="space-y-4 w-full ml-6 max-w-4/5">
                     // User profile card section
                     <div class="flex flex-col gap-1">
                         <Button
                             onclick={go_to_key_recovery}
+                            size={shady_minions::ui::ButtonSize::Small}
                             variant={shady_minions::ui::ButtonVariant::Outline}
                         >
                             <lucide_yew::Key class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 flex-shrink-0 text-secondary" />
-                            <span class="font-medium truncate">{ language_ctx.t("settings_key_recovery") }</span>
+                            <span class="font-medium truncate text-sm">{ language_ctx.t("settings_key_recovery") }</span>
                         </Button>
 
                         <Button
                             onclick={go_to_relay_management}
+                            size={shady_minions::ui::ButtonSize::Small}
                             variant={shady_minions::ui::ButtonVariant::Outline}
                         >
                             <lucide_yew::Wifi class="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 flex-shrink-0 text-secondary" />
-                            <span class="font-medium truncate">{"Relay Management"}</span>
+                            <span class="font-medium truncate text-sm">{"Relay Management"}</span>
                         </Button>
                     </div>
                     <div class="border border-secondary w-full max-w-sm mx-auto my-6" />
@@ -358,8 +397,8 @@ pub fn game_details_modal() -> Html {
         <>
             <Button onclick={close_on_click}
                 variant={shady_minions::ui::ButtonVariant::Outline}
-                size={shady_minions::ui::ButtonSize::Small}>
-                <lucide_yew::SquarePen class="size-4" />
+                size={shady_minions::ui::ButtonSize::Icon}>
+                <lucide_yew::SquarePen class="size-7" />
             </Button>
             <Modal {is_open}>
                 <GameDetailsForm game_ctx={game_ctx} />
@@ -386,7 +425,7 @@ pub fn game_details_form(props: &GameDetailsFormProps) -> Html {
     );
 
     html! {
-        <Card class="w-full max-w-md">
+        <Card class="w-full max-w-md max-h-[76vh] overflow-y-auto">
             <CardHeader>
                 <CardTitle>
                     { language_ctx.t("common_game_details") }
@@ -582,7 +621,7 @@ pub fn move_list() -> Html {
     html! {
         <div
             ref={container_ref}
-            class="flex flex-row p-3 items-center w-full mx-auto overflow-x-auto whitespace-nowrap gap-3 pb-2 max-w-sm min-h-12 bg-background rounded-lg"
+            class="flex flex-row p-3 items-center w-full overflow-x-auto whitespace-nowrap gap-3 pb-2 max-w-sm min-h-12 bg-background rounded-lg"
         >
             { for moves.chunks(2).enumerate().map(|(index, m)| {
                 let white_move = m.first().expect("White move");

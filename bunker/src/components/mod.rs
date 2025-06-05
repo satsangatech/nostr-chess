@@ -132,48 +132,48 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
 
     html! {
         <>
-                <Card class="h-fit w-fit">
-                    <CardHeader>
-                        <CardTitle >
-                            <div ref={board_ref} id={game_id} class="h-[66vh] aspect-square" />
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent class="flex gap-4">
-                        <Button
-                            class="flex-1"
-                            onclick={Callback::from(move |_| {
-                                prev_move_onclick.emit(());
-                            })}>
-                            {"Previous Move"}
-                        </Button>
-                        <Button
-                            class="flex-1"
-                            onclick={Callback::from(move |_| {
-                                next_move_onclick.emit(());
-                            })}>
-                            {"Next Move"}
-                        </Button>
-                    </CardContent>
-                </Card>
-                <Card class="h-fit min-w-sm  max-h-[86vh] overflow-hidden">
-                    <CardHeader>
-                        <CardTitle class="mb-8">
-                            <div class="flex justify-between items-top">
-                                <h3 class="text-2xl font-bold text-white">
-                                    {"Game Info"}
-                                </h3>
-                            </div>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                    <GameCard pgn_game={props.game.clone()}  />
-                    <div class="flex flex-col gap-2 p-6">
-                        <ShareRookyGame ..props.clone() />
-                        <DirectMessageRookyGame ..props.clone() />
-                        <SaveTxtRookyGame ..props.clone() />
+        <Card class="h-fit w-fit">
+            <CardHeader>
+                <CardTitle >
+                    <div ref={board_ref} id={game_id} class="h-[66vh] aspect-square" />
+                </CardTitle>
+            </CardHeader>
+            <CardContent class="flex gap-4">
+                <Button
+                    class="flex-1"
+                    onclick={Callback::from(move |_| {
+                        prev_move_onclick.emit(());
+                    })}>
+                    {"Previous Move"}
+                </Button>
+                <Button
+                    class="flex-1"
+                    onclick={Callback::from(move |_| {
+                        next_move_onclick.emit(());
+                    })}>
+                    {"Next Move"}
+                </Button>
+            </CardContent>
+        </Card>
+        <Card class="h-fit min-w-sm  max-h-[86vh] overflow-hidden">
+            <CardHeader>
+                <CardTitle class="mb-8">
+                    <div class="flex justify-between items-top">
+                        <h3 class="text-2xl font-bold text-white">
+                            {"Game Info"}
+                        </h3>
                     </div>
-                    </CardContent>
-                </Card>
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+            <GameCard pgn_game={props.game.clone()}  />
+            <div class="flex flex-col gap-2 p-6">
+                <ShareRookyGame ..props.clone() />
+                <DirectMessageRookyGame ..props.clone() />
+                <SaveTxtRookyGame ..props.clone() />
+            </div>
+            </CardContent>
+        </Card>
         </>
     }
 }

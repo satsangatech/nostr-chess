@@ -159,6 +159,12 @@ impl RookyGame {
         writeln!(pgn, "{}", self.outcome).unwrap();
         pgn
     }
+
+    #[must_use]
+    pub fn take_back(&mut self) -> Option<pgn_reader::SanPlus> {
+        self.moves.pop()
+    }
+
     #[must_use]
     pub fn game_positions(&self) -> Vec<shakmaty::Chess> {
         let mut positions = Vec::new();

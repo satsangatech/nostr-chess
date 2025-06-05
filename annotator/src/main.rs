@@ -95,7 +95,8 @@ fn login_check(props: &yew::html::ChildrenProps) -> Html {
         "duration-900",
         "z-20",
         "flex",
-        "opacity-100"
+        "opacity-100",
+        "py-8"
     );
     let hidden = classes!(
         "fixed",
