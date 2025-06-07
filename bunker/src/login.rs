@@ -8,6 +8,7 @@ use web_sys::wasm_bindgen::JsCast;
 use yew::prelude::*;
 #[function_component(NostrLogin)]
 pub fn login_form() -> Html {
+    let language_ctx = crate::language::use_language_ctx();
     let open_modal = use_state(|| false);
     let login_modal = use_state(|| false);
     let onclick = {
@@ -27,38 +28,39 @@ pub fn login_form() -> Html {
         <img
             class={classes!("mb-4",  "mx-auto")}
             src="public/img/splashscreen.svg"
-            alt="Rooky Logo" />
+            alt={language_ctx.t("login_logo_alt")}
+        />
         <Card class={classes!("max-w-sm", "min-w-sm")}>
             <CardHeader>
-                <CardTitle>{ "Chess Bunker" }</CardTitle>
-                <CardDescription class="text-primary-foreground">{ "Login to your safe data storage." }</CardDescription>
+                <CardTitle>{ language_ctx.t("login_title") }</CardTitle>
+                <CardDescription class="text-primary-foreground">{ language_ctx.t("login_subtitle") }</CardDescription>
             </CardHeader>
             <CardContent>
                 <Tabs default_value="register" class={classes!("w-full")}>
                     <TabsList class={classes!("justify-stretch", "w-full", "flex")}>
-                        <TabsTrigger value="register">{ "New Identity" }</TabsTrigger>
-                        <TabsTrigger value="login">{ "Recover" }</TabsTrigger>
+                        <TabsTrigger value="register">{ language_ctx.t("login_new_identity") }</TabsTrigger>
+                        <TabsTrigger value="login">{ language_ctx.t("login_recover") }</TabsTrigger>
                     </TabsList>
                     <TabsContent value="register">
-                        <p class={classes!("text-sm", "text-primary-foreground")}>
-                            { "If you don't haev a key, you can generate a new one here." }
+                        <p class={classes!("text-sm", "text-muted-foreground")}>
+                            { language_ctx.t("login_no_key_message") }
                         </p>
                         <Button
                             {onclick}
                             r#type={shady_minions::ui::ButtonType::Button}
                             class={classes!("mt-4", "flex-1")}>
-                            { "Generate Key" }
+                            { language_ctx.t("login_generate_key") }
                         </Button>
                     </TabsContent>
                     <TabsContent value="login">
-                        <p class={classes!("text-sm", "text-primary-foreground")}>
-                            { "Recover your data from the cloud using your secret key." }
+                        <p class={classes!("text-sm", "text-muted-foreground")}>
+                            { language_ctx.t("login_recover_message") }
                         </p>
                         <Button
                             onclick={login_onclick}
                             r#type={shady_minions::ui::ButtonType::Button}
                             class={classes!("mt-4", "flex-1")}>
-                            { "Input Key" }
+                            { language_ctx.t("login_input_key") }
                         </Button>
                     </TabsContent>
                 </Tabs>
@@ -76,6 +78,7 @@ pub fn login_form() -> Html {
 
 #[function_component(LoginForm)]
 pub fn new_key_form() -> Html {
+    let language_ctx = crate::language::use_language_ctx();
     let key_ctx = use_context::<nostr_minions::key_manager::NostrIdStore>()
         .expect("KeyManagerProvider not found");
 
@@ -158,26 +161,21 @@ pub fn new_key_form() -> Html {
     html! {
         <Card>
             <CardHeader>
-                <CardTitle>{"Log In"}</CardTitle>
+                <CardTitle>{ language_ctx.t("login_signin") }</CardTitle>
                 <CardDescription class={classes!("flex-1")}>
-                    {
-                        r#"
-                            Your data is stored encrypted in the Nostr network.
-                            It can only be recovered using your secret key.
-                        "#
-                    }
+                    { language_ctx.t("login_data_stored_message") }
                 </CardDescription>
             </CardHeader>
             <CardContent class={classes!("space-y-4")}>
                 <Tabs default_value="mnemonic" class={classes!("w-full")}>
                     <TabsList class={classes!("justify-stretch", "w-full", "flex")}>
-                        <TabsTrigger value="mnemonic">{ "Seed Phrase" }</TabsTrigger>
-                        <TabsTrigger value="hex-key">{ "Passkey" }</TabsTrigger>
+                        <TabsTrigger value="mnemonic">{ language_ctx.t("login_seed_phrase") }</TabsTrigger>
+                        <TabsTrigger value="hex-key">{ language_ctx.t("login_passkey") }</TabsTrigger>
                     </TabsList>
                     <TabsContent value="mnemonic" class={classes!("space-y-4")}>
                         <Form onsubmit={mnemonic_submit}>
                             <p class={classes!("font-bold", "text-muted-foreground", "select-none", "pointer-events-none")}>
-                                { "Ensure you keep the correct order." }
+                                { language_ctx.t("login_keep_order") }
                             </p>
                             <div class={classes!("font-bold", "text-sm", "grid", "grid-cols-3", "gap-2")}>
                                 { (1..24).map(|i| {
@@ -185,7 +183,7 @@ pub fn new_key_form() -> Html {
                                         <div class={classes!("text-center", "text-sm", "font-bold", "flex", "gap-1")}>
                                             <Input
                                                 id={format!("word-{i}")}
-                                                placeholder={format!("Word {i}")}
+                                                placeholder={language_ctx.t("login_word_format").replace("{0}", &i.to_string())}
                                                 required={true}
                                                 r#type={shady_minions::ui::InputType::Text}
                                                 class={classes!("text-sm", "font-bold", "text-center")}/>
@@ -196,14 +194,14 @@ pub fn new_key_form() -> Html {
                             <Button
                                 r#type={shady_minions::ui::ButtonType::Submit}
                                 class={classes!("mt-4", "mr-4")}>
-                                { "Save" }
+                                { language_ctx.t("common_save") }
                             </Button>
                         </Form>
                     </TabsContent>
                     <TabsContent value="hex-key" class={classes!("space-y-4")}>
                         <Form onsubmit={nsec_submit}>
                         <p class={classes!("font-bold", "text-muted-foreground", "select-none", "pointer-events-none")}>
-                            { "Your secret key should start with the prefix `nsec`" }
+                            { language_ctx.t("login_nsec_prefix") }
                         </p>
                         <Input
                             id="hex-key"
@@ -214,7 +212,7 @@ pub fn new_key_form() -> Html {
                         <Button
                             r#type={shady_minions::ui::ButtonType::Submit}
                             class={classes!("mt-4", "mr-4")}>
-                            { "Save" }
+                            { language_ctx.t("common_save") }
                         </Button>
                         </Form>
                     </TabsContent>
@@ -226,6 +224,7 @@ pub fn new_key_form() -> Html {
 
 #[function_component(NewKeyForm)]
 pub fn new_key_form() -> Html {
+    let language_ctx = crate::language::use_language_ctx();
     let key_ctx = use_context::<nostr_minions::key_manager::NostrIdStore>()
         .expect("KeyManagerProvider not found");
     let new_key =
@@ -272,25 +271,20 @@ pub fn new_key_form() -> Html {
     html! {
         <Card>
             <CardHeader>
-                <CardTitle>{ "New Key" }</CardTitle>
+                <CardTitle>{ language_ctx.t("login_new_key") }</CardTitle>
                 <CardDescription class={classes!("flex-1")}>
-                    { r#"
-                        This key is secret.
-                        It cannot be recovered if lost.
-                        We recommend using at least one of the following security options.
-                        "# 
-                    }
+                    { language_ctx.t("login_key_secret_message") }
                 </CardDescription>
             </CardHeader>
             <CardContent class={classes!("space-y-4")}>
                 <Tabs default_value="mnemonic" class={classes!("w-full")}>
                     <TabsList class={classes!("justify-stretch", "w-full", "flex")}>
-                        <TabsTrigger value="mnemonic">{ "Seed Phrase" }</TabsTrigger>
-                        <TabsTrigger value="hex-key">{ "Passkey" }</TabsTrigger>
+                        <TabsTrigger value="mnemonic">{ language_ctx.t("login_seed_phrase") }</TabsTrigger>
+                        <TabsTrigger value="hex-key">{ language_ctx.t("login_passkey") }</TabsTrigger>
                     </TabsList>
                     <TabsContent value="mnemonic" class={classes!("space-y-4")}>
-                        <p class={classes!("font-bold", "text-primary-foreground", "select-none", "pointer-events-none")}>
-                            { "Keep a physical copy of this phrase in a safe place." }
+                        <p class={classes!("font-bold", "text-muted-foreground", "select-none", "pointer-events-none")}>
+                            { language_ctx.t("login_physical_copy") }
                         </p>
                         <div class={classes!("font-bold", "text-sm", "grid", "grid-cols-3", "gap-2")}>
                             { mnemonic.split_whitespace().enumerate().map(|(i, word)| {
@@ -306,8 +300,8 @@ pub fn new_key_form() -> Html {
                         </div>
                     </TabsContent>
                     <TabsContent value="hex-key" class={classes!("space-y-4")}>
-                        <p class={classes!("font-bold", "text-primary-foreground", "select-none", "pointer-events-none")}>
-                            { "Save this key in your password manager." }
+                        <p class={classes!("font-bold", "text-muted-foreground", "select-none", "pointer-events-none")}>
+                            { language_ctx.t("login_save_key") }
                         </p>
                         <div class={classes!("flex", "gap-2" , "items-center")}>
                         <h3 class={classes!("flex-1", "font-medium", "leading-none", "text-wrap", "max-w-xs", "break-all", "mr-4")}>
@@ -326,14 +320,14 @@ pub fn new_key_form() -> Html {
                     r#type={shady_minions::ui::ButtonType::Button}
                     {onclick}
                     class={classes!("mt-4", "mr-4")}>
-                    { "Save" }
+                    { language_ctx.t("common_save") }
                 </Button>
                 <Button
                     r#type={shady_minions::ui::ButtonType::Button}
                     variant={shady_minions::ui::ButtonVariant::Outline}
                     onclick={generate_new_key}
                     class={classes!("mt-4", "mr-4")}>
-                    { "Generate New" }
+                    { language_ctx.t("login_generate_new") }
                 </Button>
             </CardContent>
         </Card>

@@ -19,6 +19,7 @@ pub struct JsChessGameProps {
 
 #[function_component(JsChessGame)]
 pub fn js_chess_game(props: &JsChessGameProps) -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let game_context = crate::live_game::use_game_history();
     let board_ref = use_node_ref();
 
@@ -144,14 +145,14 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
                     onclick={Callback::from(move |_| {
                         prev_move_onclick.emit(());
                     })}>
-                    {"Previous Move"}
+                    {language_ctx.t("game_prev_move")}
                 </Button>
                 <Button
                     class="flex-1"
                     onclick={Callback::from(move |_| {
                         next_move_onclick.emit(());
                     })}>
-                    {"Next Move"}
+                    {language_ctx.t("game_next_move")}
                 </Button>
             </CardContent>
         </Card>
@@ -160,7 +161,7 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
                 <CardTitle class="mb-8">
                     <div class="flex justify-between items-top">
                         <h3 class="text-2xl font-bold text-white">
-                            {"Game Info"}
+                            {language_ctx.t("common_game_details")}
                         </h3>
                     </div>
                 </CardTitle>
@@ -180,12 +181,13 @@ pub fn js_chess_game(props: &JsChessGameProps) -> Html {
 
 #[function_component(ShareRookyGameCard)]
 pub fn share_rooky_game_card(props: &JsChessGameProps) -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
         <Card class="size-fit">
             <CardHeader>
-                <CardTitle>{ "Share Rooky Game" }</CardTitle>
+                <CardTitle>{language_ctx.t("share_rooky_game_title")}</CardTitle>
                 <CardDescription class="max-w-64 text-wrap">
-                    { "Share this game with others. Any option you choose will also save the game locally on the app." }
+                    {language_ctx.t("share_rooky_game_desc")}
                 </CardDescription>
             </CardHeader>
             <CardContent class="flex flex-col gap-2">
@@ -200,6 +202,7 @@ pub fn share_rooky_game_card(props: &JsChessGameProps) -> Html {
 
 #[function_component(ShareRookyGame)]
 pub fn share_rooky_game(props: &JsChessGameProps) -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let relay_ctx = use_context::<nostr_minions::relay_pool::NostrRelayPoolStore>()
         .expect("Relay context not found");
     let game_ctx = crate::live_game::use_game_history();
@@ -252,13 +255,14 @@ pub fn share_rooky_game(props: &JsChessGameProps) -> Html {
         <Button {onclick}>
             <lucide_yew::Share2
                 class={classes!("size-5")} />
-            <span class="ml-2">{"Share to Nostr Socials"}</span>
+            <span class="ml-2">{language_ctx.t("share_to_nostr")}</span>
         </Button>
     }
 }
 use nostr_minions::nostro2_signer::nostro2_nips::Nip17;
 #[function_component(DirectMessageRookyGame)]
 pub fn dm_rooky_game(props: &JsChessGameProps) -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let relay_ctx = use_context::<nostr_minions::relay_pool::NostrRelayPoolStore>()
         .expect("Relay context not found");
     let game_ctx = crate::live_game::use_game_history();
@@ -321,7 +325,7 @@ pub fn dm_rooky_game(props: &JsChessGameProps) -> Html {
             <PopoverTrigger>
                 <div class="flex items-center gap-2">
                 <lucide_yew::MessageSquareLock class={classes!("size-5")} />
-                <span class="ml-2">{"Send Nostr DM"}</span>
+                <span class="ml-2">{language_ctx.t("send_nostr_dm")}</span>
                 </div>
             </PopoverTrigger>
             <PopoverContent>
@@ -329,7 +333,7 @@ pub fn dm_rooky_game(props: &JsChessGameProps) -> Html {
                     <Input
                         name="recipient"
                         r#type={shady_minions::ui::InputType::Text}
-                        placeholder="Enter recipient Nostr ID"
+                        placeholder={language_ctx.t("enter_recipient_nostr_id")}
                         class={classes!("w-full", "mb-2", "min-w-32")} />
                     <Button r#type={shady_minions::ui::ButtonType::Submit}>
                         <lucide_yew::MessageSquareLock class={classes!("size-5")} />
@@ -348,6 +352,7 @@ pub struct GameCardProps {
 
 #[function_component(GameCard)]
 pub fn game_card(props: &GameCardProps) -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let rooky_core::RookyGame {
         event,
         outcome,
@@ -362,12 +367,12 @@ pub fn game_card(props: &GameCardProps) -> Html {
     // Check if it's a casual game
     let is_casual_game = event == &rooky_core::pgn_standards::PgnEvent::Casual;
     let white_name = if white.is_empty() {
-        "White".to_string()
+        language_ctx.t("game_details_white")
     } else {
         white.clone()
     };
     let black_name = if black.is_empty() {
-        "Black".to_string()
+        language_ctx.t("game_details_black")
     } else {
         black.clone()
     };
@@ -379,26 +384,26 @@ pub fn game_card(props: &GameCardProps) -> Html {
                         { format!("{white_name} vs {black_name}") }
                     </h3>
                     <div class="flex justify-between text-white">
-                        <span class="text-sm font-bold">{ "Date" }</span>
+                        <span class="text-sm font-bold">{language_ctx.t("game_details_date")}</span>
                         <span class="text-sm">{ date.format("%Y-%m-%d").to_string() }</span>
                     </div>
                     <div class="flex justify-between text-white">
-                        <span class="text-sm font-bold">{ "Result" }</span>
+                        <span class="text-sm font-bold">{language_ctx.t("game_details_result")}</span>
                         <span class="text-sm">{ outcome.to_string() }</span>
                     </div>
                     <div class="flex justify-between text-white">
-                        <span class="text-sm font-bold">{ "Event" }</span>
+                        <span class="text-sm font-bold">{language_ctx.t("game_details_event")}</span>
                         <span class="text-sm">{ event.to_string() }</span>
                     </div>
                     {if !is_casual_game {
                         html! {
                             <>
                             <div class="flex justify-between text-white">
-                                <span class="text-sm font-bold">{ "Site" }</span>
+                                <span class="text-sm font-bold">{language_ctx.t("game_details_site")}</span>
                                 <span class="text-sm">{ site.to_string() }</span>
                             </div>
                             <div class="flex justify-between text-white">
-                                <span class="text-sm font-bold">{ "Round" }</span>
+                                <span class="text-sm font-bold">{language_ctx.t("game_details_round")}</span>
                                 <span class="text-sm">{ round.to_string() }</span>
                             </div>
                             </>
@@ -439,6 +444,7 @@ pub fn game_card(props: &GameCardProps) -> Html {
 
 #[function_component(SaveTxtRookyGame)]
 pub fn save_txt_rooky_game(props: &JsChessGameProps) -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     use nostr_minions::browser_api::IdbStoreManager;
     let game = props.game.clone();
     let game_context = crate::live_game::use_game_history();
@@ -513,7 +519,7 @@ pub fn save_txt_rooky_game(props: &JsChessGameProps) -> Html {
     html! {
         <Button {onclick}>
             <lucide_yew::Download class={classes!("size-5")} />
-            <span class="ml-2">{"Save as PGN file"}</span>
+            <span class="ml-2">{language_ctx.t("share_save_pgn")}</span>
         </Button>
     }
 }

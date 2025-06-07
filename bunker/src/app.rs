@@ -79,6 +79,7 @@ fn app() -> HtmlResult {
 
 #[function_component(Navbar)]
 fn navbar() -> Html {
+    let language_ctx = bunker::language::use_language_ctx();
     let navbar_button_class = classes!(
         "2xl:size-32",
         "xl:size-28",
@@ -107,7 +108,7 @@ fn navbar() -> Html {
                     )}>
                     <img src="/public/img/splashscreen.svg"
                          class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12")} />
-                    <span class={classes!("")}>{"Home"}</span>
+                    <span class={classes!("")}>{ language_ctx.t("navbar_home") }</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>
             <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::NewGame}>
@@ -119,9 +120,8 @@ fn navbar() -> Html {
                         "bg-zinc-800"
                     }
                     )}>
-                    <lucide_yew::Plus
-                         class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12")} />
-                    <span class={classes!("")}>{"Annotate"}</span>
+                    <lucide_yew::Plus class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12")} />
+                    <span class={classes!("")}>{ language_ctx.t("navbar_annotate") }</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>
             <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::MyGames}>
@@ -133,9 +133,8 @@ fn navbar() -> Html {
                         "bg-zinc-800"
                     }
                     )}>
-                    <lucide_yew::BookOpen
-                        class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12", )} />
-                    <span class={classes!("")}>{"Repertoire"}</span>
+                    <lucide_yew::BookOpen class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12", )} />
+                    <span class={classes!("")}>{ language_ctx.t("navbar_repertoire") }</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>
             <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::Search}>
@@ -147,9 +146,8 @@ fn navbar() -> Html {
                         "bg-zinc-800"
                     }
                     )}>
-                    <lucide_yew::Search
-                        class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12", )} />
-                    <span class={classes!("")}>{"Search"}</span>
+                    <lucide_yew::Search class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12", )} />
+                    <span class={classes!("")}>{ language_ctx.t("navbar_search") }</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>
             <yew_router::components::Link<bunker::MainRoute> to={bunker::MainRoute::Settings}>
@@ -161,9 +159,8 @@ fn navbar() -> Html {
                         "bg-zinc-800"
                     }
                     )}>
-                    <lucide_yew::Cog
-                        class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12", )} />
-                    <span class={classes!("")}>{"Settings"}</span>
+                    <lucide_yew::Cog class={classes!("size-6", "lg:size-8", "xl:size-10", "2xl:size-12", )} />
+                    <span class={classes!("")}>{ language_ctx.t("common_settings") }</span>
                 </div>
             </yew_router::components::Link<bunker::MainRoute>>
         </navbar>
