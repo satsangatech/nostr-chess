@@ -150,16 +150,17 @@ pub fn js_chess_game() -> Html {
         });
     }
 
+    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
         <div class="pl-12 h-full flex flex-col justify-evenly">
-            <h2 class="text-4xl text-white font-black">{"New Game"}</h2>
+            <h2 class="text-4xl text-white font-black">{ language_ctx.t("home_start_new_game") }</h2>
             <div class="flex justify-evenly gap-6">
                 <Card class="h-fit min-w-sm  max-h-[86vh] overflow-hidden">
                     <CardHeader>
                         <CardTitle class="mb-8">
                             <div class="flex justify-between items-top">
                                 <h3 class="text-2xl font-bold text-white">
-                                    {"Game Info"}
+                                    { language_ctx.t("common_game_details") }
                                 </h3>
                                 <GameDetailsModal  pgn_game={pgn_game.clone()} on_update={force_update_cb.clone()} />
                             </div>
@@ -192,11 +193,12 @@ pub fn game_form(props: &GameFormProps) -> Html {
     let pgn_game = props.pgn_game.clone();
     let on_update = props.on_update.clone();
 
+    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
         <Card class="size-fit">
             <CardHeader >
                 <CardTitle>
-                    { "Edit Game Info" }
+                    { language_ctx.t("edit_game_info") }
                 </CardTitle>
             </CardHeader>
             <CardContent class="flex flex-col gap-2">
@@ -215,7 +217,7 @@ pub fn game_form(props: &GameFormProps) -> Html {
                 />
                 <Input
                     r#type={shady_minions::ui::InputType::Text}
-                    placeholder={"White"}
+                    placeholder={ language_ctx.t("common_white") }
                     class="w-full"
                     onchange={{
                         let pgn_game = pgn_game.clone();
@@ -228,7 +230,7 @@ pub fn game_form(props: &GameFormProps) -> Html {
                 />
                 <Input
                     r#type={shady_minions::ui::InputType::Text}
-                    placeholder={"Black"}
+                    placeholder={ language_ctx.t("common_black") }
                     class="w-full"
                     onchange={{
                         let pgn_game = pgn_game.clone();
@@ -245,7 +247,7 @@ pub fn game_form(props: &GameFormProps) -> Html {
                         class="w-full"
                         variant={shady_minions::ui::ButtonVariant::Outline}>
 
-                        { "Event" }
+                        { language_ctx.t("game_details_event") }
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent>
@@ -270,21 +272,21 @@ pub fn game_form(props: &GameFormProps) -> Html {
                             <Input
                                 name="event_name"
                                 r#type={shady_minions::ui::InputType::Text}
-                                placeholder={"Event"}
+                                placeholder={ language_ctx.t("game_details_enter_event_name") }
                                 required={true}
                                 class="w-full"
                             />
                             <Input
                                 name="site"
                                 r#type={shady_minions::ui::InputType::Text}
-                                placeholder={"Site"}
+                                placeholder={ language_ctx.t("game_details_enter_site") }
                                 required={true}
                                 class="w-full"
                             />
                             <Input
                                 name="round"
                                 r#type={shady_minions::ui::InputType::Text}
-                                placeholder={"Round"}
+                                placeholder={ language_ctx.t("game_details_enter_round") }
                                 required={true}
                                 class="w-full"
                             />
@@ -292,7 +294,7 @@ pub fn game_form(props: &GameFormProps) -> Html {
                                 r#type={shady_minions::ui::ButtonType::Submit}
                                 class="w-full"
                                 variant={shady_minions::ui::ButtonVariant::Outline}>
-                                { "Save" }
+                                { language_ctx.t("common_save") }
                             </Button>
                         </Form>
                     </PopoverContent>
@@ -328,6 +330,7 @@ pub fn game_details_modal(props: &GameFormProps) -> Html {
 pub fn share_game_modal(props: &crate::components::GameCardProps) -> Html {
     let is_open = use_state(|| false);
     let game = props.pgn_game.clone();
+    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
         <>
             <Button
@@ -338,7 +341,7 @@ pub fn share_game_modal(props: &crate::components::GameCardProps) -> Html {
                     Callback::from(move |_| {
                     is_open.set(!&*is_open);
                 })}>
-                    <span class="text-sm font-bold text-white">{ "Finish Game" }</span>
+                    <span class="text-sm font-bold text-white">{ language_ctx.t("finish_game") }</span>
             </Button>
             <Modal {is_open}>
                 <ShareRookyGameCard  {game} />

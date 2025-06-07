@@ -107,7 +107,7 @@ pub fn user_profile_card() -> Html {
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="max-w-xs">
-                            <label class="text-sm font-medium text-muted">{"Public Key"}</label>
+                            <label class="text-sm font-medium text-muted">{ language_ctx.t("key_recovery_public_key") }</label>
                             <div onclick={
                                 let pubkey_clone = pubkey.clone();
                                 let copied = copied_hex.setter();
@@ -130,7 +130,7 @@ pub fn user_profile_card() -> Html {
                                                 language_ctx.t("notification_copied_to_clipboard")
                                             } else {
                                                 pubkey.as_ref().map_or_else(
-                                                || language_ctx.t("no_public_key"),
+                                                || language_ctx.t("profile_no_public_key"),
                                                 |pk| pk.public_key())
                                             }
                                         }
@@ -142,12 +142,12 @@ pub fn user_profile_card() -> Html {
                                     } else {
                                        html! { <lucide_yew::Copy class="size-8" /> }
                                     }}
-                                    <span class="sr-only">{"Copy public key"}</span>
+                                    <span class="sr-only">{ language_ctx.t("key_recovery_copy_public_key") }</span>
                                 </button>
                             </div>
                         </div>
                         <div class="max-w-xs">
-                            <label class="text-sm font-medium text-muted">{"Npub"}</label>
+                            <label class="text-sm font-medium text-muted">{ language_ctx.t("profile_npub") }</label>
                             <div onclick={
                                     let pubkey_clone = pubkey.clone();
                                     let copied = copied_npub.setter();
@@ -169,7 +169,7 @@ pub fn user_profile_card() -> Html {
                                                 language_ctx.t("notification_copied_to_clipboard")
                                             } else {
                                                 pubkey.as_ref().and_then(|pk| pk.npub().ok()).unwrap_or(
-                                                language_ctx.t("no_public_key")
+                                                language_ctx.t("profile_no_public_key")
                                                 )
                                             }
                                         }
@@ -181,7 +181,7 @@ pub fn user_profile_card() -> Html {
                                     } else {
                                        html! { <lucide_yew::Copy class="size-8" /> }
                                     }}
-                                    <span class="sr-only">{"Copy public key"}</span>
+                                    <span class="sr-only">{ language_ctx.t("profile_copy_npub") }</span>
                                 </button>
                             </div>
                         </div>

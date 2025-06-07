@@ -389,6 +389,7 @@ fn key_recovery_section() -> Html {
 
 #[function_component(RelayManagementPage)]
 pub fn relay_management_page() -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let new_relay_url = use_state(String::new);
     let relay_ctx = nostr_minions::relay_pool::use_nostr_relay_pool();
 
@@ -472,13 +473,13 @@ pub fn relay_management_page() -> Html {
     html! {
             <Card class="max-w-md h-fit">
                 <CardHeader>
-                    <CardTitle>{"Add New Relay"}</CardTitle>
+                    <CardTitle>{ language_ctx.t("relay_add_new") }</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div class="flex gap-2">
                         <Input
                             r#type={shady_minions::ui::InputType::Text}
-                            placeholder="wss://relay.example.com"
+                            placeholder={language_ctx.t("relay_placeholder")}
                             value={(*new_relay_url).clone()}
                             oninput={on_url_input}
                             class="flex-1"
@@ -492,15 +493,15 @@ pub fn relay_management_page() -> Html {
                     </div>
                 </CardContent>
                 <CardHeader>
-                    <CardTitle>{"Connected Relays"}</CardTitle>
+                    <CardTitle>{ language_ctx.t("relay_connected_relays") }</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {if relays.is_empty() {
                         html! {
                             <div class="text-center py-8 text-muted-foreground">
                                 <lucide_yew::Wifi class="w-12 h-12 mx-auto mb-2 opacity-50" />
-                                <p>{"No relays configured"}</p>
-                                <p class="text-sm">{"Add a relay above to get started"}</p>
+                                <p>{ language_ctx.t("relay_no_configured") }</p>
+                                <p class="text-sm">{ language_ctx.t("relay_add_hint") }</p>
                             </div>
                         }
                     } else {
@@ -539,15 +540,26 @@ pub struct RelayItemProps {
 
 #[function_component(RelayItem)]
 pub fn relay_item(props: &RelayItemProps) -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let (status_color, status_text, status_icon) = match props.relay {
-        nostr_minions::relay_pool::ReadyState::CONNECTING => {
-            ("text-yellow-500", "Connecting", "⏳")
+        nostr_minions::relay_pool::ReadyState::CONNECTING => (
+            "text-yellow-500",
+            language_ctx.t("relay_status_connecting"),
+            "⏳",
+        ),
+        nostr_minions::relay_pool::ReadyState::OPEN => (
+            "text-green-500",
+            language_ctx.t("relay_status_connected"),
+            "✅",
+        ),
+        nostr_minions::relay_pool::ReadyState::CLOSING => (
+            "text-orange-500",
+            language_ctx.t("relay_status_closing"),
+            "⏳",
+        ),
+        nostr_minions::relay_pool::ReadyState::CLOSED => {
+            ("text-red-500", language_ctx.t("relay_status_closed"), "❌")
         }
-        nostr_minions::relay_pool::ReadyState::OPEN => ("text-green-500", "Connected", "✅"),
-        nostr_minions::relay_pool::ReadyState::CLOSING => {
-            ("text-orange-500", "Disconnecting", "⏳")
-        }
-        nostr_minions::relay_pool::ReadyState::CLOSED => ("text-red-500", "Disconnected", "❌"),
     };
 
     html! {

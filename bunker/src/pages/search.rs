@@ -58,16 +58,17 @@ struct SearchPickerProps {
 #[function_component(SearchPicker)]
 fn search_picker(props: &SearchPickerProps) -> Html {
     let selected = props.selected.clone();
+    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
         <Card class="size-fit max-w-3xl mx-auto">
             <CardHeader>
-                <CardTitle>{"Searching for games?"}</CardTitle>
+                <CardTitle>{language_ctx.t("games_searching")}</CardTitle>
                 <CardDescription class="text-sm text-white">
-                    {"Query your favourite sites and find games to save in your app."}
+                    {language_ctx.t("games_searching_description")}
                 </CardDescription>
             </CardHeader>
             <CardContent class="space-y-4">
-                <h3 class="text-lg font-semibold">{"What site would you like to query?"}</h3>
+                <h3 class="text-lg font-semibold">{language_ctx.t("game_site_search_question")}</h3>
                 <div class="flex flex-col gap-4">
                     <Button
                         r#type={ButtonType::Button}
@@ -82,7 +83,7 @@ fn search_picker(props: &SearchPickerProps) -> Html {
                     >
                         <img
                             src="https://upload.wikimedia.org/wikipedia/commons/4/47/Lichess_logo_2019.png"
-                            alt="Lichess Logo"
+                            alt={language_ctx.t("search_lichess_logo_alt")}
                             class="size-6 mr-2" />
                         {"Lichess"}
                     </Button>
@@ -99,7 +100,7 @@ fn search_picker(props: &SearchPickerProps) -> Html {
                     >
                         <img
                             src="https://images.chesscomfiles.com/uploads/v1/images_users/tiny_mce/PedroPinhata/phpkXK09k.png"
-                            alt="Chess.com Logo"
+                            alt={language_ctx.t("search_chesscom_logo_alt")}
                             class="size-6 mr-2 object-contain" />
                         {"Chess.com"}
                     </Button>
@@ -111,6 +112,7 @@ fn search_picker(props: &SearchPickerProps) -> Html {
 
 #[function_component(LichessSearchForm)]
 pub fn external_search_form() -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let query_state = use_state(external::LichessGameQuery::default);
     let keypair = nostr_minions::key_manager::use_nostr_key();
     let game_ctx = crate::live_game::use_game_history();
@@ -190,9 +192,9 @@ pub fn external_search_form() -> Html {
     html! {
         <Card class="size-fit max-w-3xl mx-auto">
             <CardHeader>
-                <CardTitle>{"Lichess Game Query"}</CardTitle>
+                <CardTitle>{language_ctx.t("search_lichess_game_query")}</CardTitle>
                 <CardDescription class="text-sm text-white">
-                    {"Fill out the form to create a LichessGameQuery struct"}
+                    {language_ctx.t("search_lichess_form_description")}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -200,13 +202,13 @@ pub fn external_search_form() -> Html {
                 <div class="space-y-4">
                   <div class="grid gap-2">
                     <Label r#for="username" class="font-medium">
-                        {"Username "}
+                        {language_ctx.t("search_username_label")}
                       <span class="text-red-500">{"*"}</span>
                     </Label>
                     <Input
                       id="username"
                       name="username"
-                      placeholder="Lichess username"
+                      placeholder={language_ctx.t("search_lichess_username_placeholder")}
                       value={query_state.username.clone()}
                       required={true}
                       onchange={username_state}
@@ -215,7 +217,7 @@ pub fn external_search_form() -> Html {
 
                   <div class="grid gap-2">
                     <Label r#for="max" class="font-medium">
-                        {"Max Games"}
+                        {language_ctx.t("search_max_games_label")}
                         <span class="text-red-500">{"*"}</span>
                     </Label>
                     <Input
@@ -224,7 +226,7 @@ pub fn external_search_form() -> Html {
                         r#type={InputType::Number}
                         min="1"
                         required={true}
-                        placeholder="Maximum number of games"
+                        placeholder={language_ctx.t("search_max_games_placeholder")}
                         value={query_state.max.map_or("".to_string(), |v| v.to_string())}
                         onchange={max_games_state}
                         />
@@ -234,7 +236,7 @@ pub fn external_search_form() -> Html {
 
                     <div class="grid gap-2">
                       <Label r#for="color" class="font-medium">
-                      {"Player Color"}
+                      {language_ctx.t("search_player_color")}
                       </Label>
                        <Select::<shakmaty::Color> id="color">
                          <SelectTrigger::<shakmaty::Color> >
@@ -249,7 +251,7 @@ pub fn external_search_form() -> Html {
 
                     <div class="grid gap-2">
                       <Label r#for="perfType" class="font-medium">
-                      {"Performance Type"}
+                      {language_ctx.t("search_performance_type")}
                       </Label>
                       <Select::<external::LichessPerfType> id="perfType">
                         <SelectTrigger::<external::LichessPerfType> label="choose perf type"/>
@@ -266,7 +268,7 @@ pub fn external_search_form() -> Html {
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="grid gap-2">
                       <Label r#for="since" class="font-medium">
-                      {"Since Date"}
+                      {language_ctx.t("search_since_date")}
                       </Label>
                       <Popover>
                         <PopoverTrigger >
@@ -282,7 +284,7 @@ pub fn external_search_form() -> Html {
                                 id="since"
                                 name="since"
                                 r#type={InputType::Date}
-                                placeholder="YYYY-MM-DD"
+                                placeholder={language_ctx.t("search_date_format_placeholder")}
                                 value={query_state.since.unwrap_or_default().to_string()}
                               />
                         </PopoverContent>
@@ -291,7 +293,7 @@ pub fn external_search_form() -> Html {
 
                     <div class="grid gap-2">
                       <Label r#for="until" class="font-medium">
-                      {"Until Date"}
+                      {language_ctx.t("search_until_date")}
                       </Label>
                       <Popover>
                         <PopoverTrigger >
@@ -307,7 +309,7 @@ pub fn external_search_form() -> Html {
                                 id="until"
                                 name="until"
                                 r#type={InputType::Date}
-                                placeholder="YYYY-MM-DD"
+                                placeholder={language_ctx.t("search_date_format_placeholder")}
                                 value={query_state.until.unwrap_or_default().to_string()}
                               />
                         </PopoverContent>
@@ -321,10 +323,10 @@ pub fn external_search_form() -> Html {
                         r#type={ButtonType::Reset}
                         variant={ButtonVariant::Outline}
                         class="flex-1">
-                        {"Clear"}
+                        {language_ctx.t("common_clear")}
                     </Button>
                     <Button r#type={ButtonType::Submit} class="flex-1">
-                        {"Generate Query"}
+                        {language_ctx.t("search_generate_query")}
                     </Button>
                 </div>
               </Form>
@@ -334,6 +336,7 @@ pub fn external_search_form() -> Html {
 }
 #[function_component(ChessComSearchForm)]
 pub fn external_search_form() -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let keypair = nostr_minions::key_manager::use_nostr_key();
     let onsubmit = {
         Callback::from(move |e: web_sys::HtmlFormElement| {
@@ -380,21 +383,21 @@ pub fn external_search_form() -> Html {
     html! {
         <Card class="size-fit max-w-3xl mx-auto">
             <CardHeader>
-              <CardTitle>{"Chess.com Game Query"}</CardTitle>
-              <CardDescription>{"Chess.com API can only retrieve a monthly archive of games."}</CardDescription>
+              <CardTitle>{language_ctx.t("search_chesscom_game_query")}</CardTitle>
+              <CardDescription>{language_ctx.t("search_chesscom_api_description")}</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {onsubmit} class="space-y-6">
                     <div class="space-y-4">
                       <div class="grid gap-2">
                         <Label r#for="username" class="font-medium">
-                            {"Username "}
+                            {language_ctx.t("search_username_label")}
                           <span class="text-red-500">{"*"}</span>
                         </Label>
                         <Input
                           id="username"
                           name="username"
-                          placeholder="Chess.com username"
+                          placeholder={language_ctx.t("search_chesscom_username_placeholder")}
                           required={true}
                         />
                       </div>
@@ -403,13 +406,13 @@ pub fn external_search_form() -> Html {
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="grid gap-2">
                           <Label r#for="month-date" class="font-medium">
-                            {"Date"}
+                            {language_ctx.t("search_date_label")}
                           </Label>
                           <Input
                               id="date"
                               name="date"
                               r#type={InputType::Month}
-                              placeholder="YYYY-MM"
+                              placeholder={language_ctx.t("search_month_format_placeholder")}
                             />
                         </div>
                       </div>
@@ -420,10 +423,10 @@ pub fn external_search_form() -> Html {
                             r#type={ButtonType::Reset}
                             variant={ButtonVariant::Outline}
                             class="flex-1">
-                            {"Clear"}
+                            {language_ctx.t("common_clear")}
                         </Button>
                         <Button r#type={ButtonType::Submit} class="flex-1">
-                            {"Generate Query"}
+                            {language_ctx.t("search_generate_query")}
                         </Button>
                     </div>
                 </Form>

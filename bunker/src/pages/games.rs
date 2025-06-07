@@ -16,9 +16,10 @@ pub fn games_page() -> Html {
     let filter_state = use_state(|| None::<rooky_core::idb::GameOrigin>);
     let page = use_state(|| 0);
     let total_pages = use_state(|| 0);
+    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
         <div class="h-full flex flex-col justify-evenly p-12 gap-6">
-            <h2 class="text-4xl text-white font-black">{"Games"}</h2>
+            <h2 class="text-4xl text-white font-black">{language_ctx.t("common_games")}</h2>
             <div class="flex flex-col justify-evenly gap-6 flex-1">
                 <FilterSelector filter={filter_state.clone()} page={page.clone()} total_pages={total_pages.clone()} />
                 <GamesList filter={filter_state.clone()} page={page.clone()} total_pages={total_pages.clone()} />
@@ -38,6 +39,7 @@ pub struct GamesFilterProps {
 pub fn games_list(props: &GamesFilterProps) -> Html {
     let filter = props.filter.clone();
     let game_ctx = crate::contexts::live_game::use_game_history();
+    let language_ctx = crate::contexts::language::use_language_ctx();
     let sort_state = use_state(|| SortGamesBy::Date(true));
     let total_setter = props.total_pages.setter();
     let games = {
@@ -126,7 +128,7 @@ pub fn games_list(props: &GamesFilterProps) -> Html {
         <div class="flex flex-col gap-4 flex-1 w-full">
             <div class="grid grid-cols-7 gap-4 bg-zinc-800 rounded-lg w-full px-6 py-3">
                 <div class="flex gap-2 items-center ">
-                    <h3 class="text-xl text-white font-black">{"Date"}</h3>
+                    <h3 class="text-xl text-white font-black">{language_ctx.t("game_details_date")}</h3>
                     <Button
                         variant={shady_minions::ui::ButtonVariant::Outline}
                         size={shady_minions::ui::ButtonSize::Small}
@@ -144,7 +146,7 @@ pub fn games_list(props: &GamesFilterProps) -> Html {
 
                 </div>
                 <div class="flex gap-2 items-center">
-                    <h3 class="text-xl text-white font-black">{"Opening"}</h3>
+                    <h3 class="text-xl text-white font-black">{language_ctx.t("common_opening")}</h3>
                     <Button
                         variant={shady_minions::ui::ButtonVariant::Outline}
                         size={shady_minions::ui::ButtonSize::Small}
@@ -161,7 +163,7 @@ pub fn games_list(props: &GamesFilterProps) -> Html {
                     </Button>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <h3 class="text-xl text-white font-black">{"White"}</h3>
+                    <h3 class="text-xl text-white font-black">{language_ctx.t("common_white")}</h3>
                     <Button
                         variant={shady_minions::ui::ButtonVariant::Outline}
                         size={shady_minions::ui::ButtonSize::Small}
@@ -178,7 +180,7 @@ pub fn games_list(props: &GamesFilterProps) -> Html {
                     </Button>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <h3 class="text-xl text-white font-black">{"Black"}</h3>
+                    <h3 class="text-xl text-white font-black">{language_ctx.t("common_black")}</h3>
                     <Button
                         variant={shady_minions::ui::ButtonVariant::Outline}
                         size={shady_minions::ui::ButtonSize::Small}
@@ -195,7 +197,7 @@ pub fn games_list(props: &GamesFilterProps) -> Html {
                     </Button>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <h3 class="text-xl text-white font-black">{"Outcome"}</h3>
+                    <h3 class="text-xl text-white font-black">{language_ctx.t("game_details_result")}</h3>
                     <Button
                         variant={shady_minions::ui::ButtonVariant::Outline}
                         size={shady_minions::ui::ButtonSize::Small}
@@ -212,7 +214,7 @@ pub fn games_list(props: &GamesFilterProps) -> Html {
                     </Button>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <h3 class="text-xl text-white font-black">{"Event"}</h3>
+                    <h3 class="text-xl text-white font-black">{language_ctx.t("game_details_event")}</h3>
                     <Button
                         variant={shady_minions::ui::ButtonVariant::Outline}
                         size={shady_minions::ui::ButtonSize::Small}
@@ -228,7 +230,7 @@ pub fn games_list(props: &GamesFilterProps) -> Html {
                         <lucide_yew::ArrowUpDown class="size-4 text-white" />
                     </Button>
                 </div>
-                <h3 class="text-xl text-white font-black align-center">{"ID"}</h3>
+                <h3 class="text-xl text-white font-black align-center">{language_ctx.t("common_id_title")}</h3>
             </div>
             { for (*games).iter().map(|game| {
                 let pgn_game = rooky_core::RookyGame::from(game);
@@ -259,6 +261,7 @@ pub fn filter_selector(props: &GamesFilterProps) -> Html {
     let filter = props.filter.clone();
     let page = props.page.clone();
     let total_pages = props.total_pages.clone();
+    let language_ctx = crate::contexts::language::use_language_ctx();
     html! {
         <div class="flex flex-row justify-between">
             <div class="flex flex-row gap-4">
@@ -268,7 +271,7 @@ pub fn filter_selector(props: &GamesFilterProps) -> Html {
                         Callback::from(move |_| {
                         filter.set(None);
                     })}>
-                        {"All"}
+                        {language_ctx.t("common_all")}
                 </Button>
                 <Button
                     onclick={
@@ -276,7 +279,7 @@ pub fn filter_selector(props: &GamesFilterProps) -> Html {
                         Callback::from(move |_| {
                         filter.set(Some(rooky_core::idb::GameOrigin::Annotated));
                     })}>
-                        {"Annotated"}
+                        {language_ctx.t("common_annotated")}
                 </Button>
                 <Button
                     onclick={
@@ -284,7 +287,7 @@ pub fn filter_selector(props: &GamesFilterProps) -> Html {
                         Callback::from(move |_| {
                         filter.set(Some(rooky_core::idb::GameOrigin::Received));
                     })}>
-                        {"Received"}
+                        {language_ctx.t("common_received")}
                 </Button>
                 <Button
                     onclick={
@@ -292,7 +295,7 @@ pub fn filter_selector(props: &GamesFilterProps) -> Html {
                         Callback::from(move |_| {
                         filter.set(Some(rooky_core::idb::GameOrigin::Public));
                     })}>
-                        {"Public"}
+                        {language_ctx.t("common_public")}
                 </Button>
             </div>
             <div class="flex flex-row gap-4">

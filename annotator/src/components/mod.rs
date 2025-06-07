@@ -105,7 +105,7 @@ pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
             <PopoverTrigger>
                 <div class="flex items-center gap-2">
                     <lucide_yew::MessageSquareLock class={classes!("size-5")} />
-                    <span class="ml-2">{ language_ctx.t("share_send_dm") }</span>
+                    <span class="ml-2">{ language_ctx.t("send_nostr_dm") }</span>
                 </div>
             </PopoverTrigger>
             <PopoverContent>
@@ -113,7 +113,7 @@ pub fn dm_rooky_game(props: &RookyGameProps) -> Html {
                     <Input
                         name="recipient"
                         r#type={shady_minions::ui::InputType::Text}
-                        placeholder={ language_ctx.t("share_enter_recipient") }
+                        placeholder={ language_ctx.t("enter_recipient_nostr_id") }
                         class={classes!("w-full", "mb-2", "min-w-32")} />
                     <Button r#type={shady_minions::ui::ButtonType::Submit}>
                         <lucide_yew::MessageSquareLock class={classes!("size-5")} />
