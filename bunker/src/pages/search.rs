@@ -27,7 +27,7 @@ pub fn search_page() -> Html {
             <Button
                 variant={ButtonVariant::Outline}
                 r#type={ButtonType::Button}
-                class="absolute top-4 right-4"
+                class="absolute top-10 left-4"
                 onclick={close_search}
             >
                 <lucide_yew::ArrowLeft class="size-8" />
