@@ -22,7 +22,6 @@ pub fn js_chess_game() -> Html {
 
     let force_update = use_state(|| 0);
     let force_update_cb = {
-        // let force_update = force_update;
         Callback::from(move |()| force_update.set(*force_update + 1))
     };
 
