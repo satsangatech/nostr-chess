@@ -22,8 +22,8 @@ pub fn js_chess_game() -> Html {
 
     let force_update = use_state(|| 0);
     let force_update_cb = {
-        let force_update = force_update.clone();
-        Callback::from(move |_| force_update.set(*force_update + 1))
+        // let force_update = force_update;
+        Callback::from(move |()| force_update.set(*force_update + 1))
     };
 
     let position = game_position.clone();
@@ -38,8 +38,8 @@ pub fn js_chess_game() -> Html {
 
             let piece_str = piece.as_string().unwrap_or_default();
             let turn = position.borrow().turn();
-            if (turn == shakmaty::Color::White && piece_str.starts_with("b"))
-                || (turn == shakmaty::Color::Black && piece_str.starts_with("w"))
+            if (turn == shakmaty::Color::White && piece_str.starts_with('b'))
+                || (turn == shakmaty::Color::Black && piece_str.starts_with('w'))
             {
                 return web_sys::wasm_bindgen::JsValue::from_bool(false);
             }
@@ -119,7 +119,7 @@ pub fn js_chess_game() -> Html {
     }) as Box<dyn Fn()>;
 
     {
-        let board_setting = game_board.clone();
+        let board_setting = game_board;
         use_effect_with(game_ctx.synced, move |synced| {
             if *synced {
                 let board_options = chessboard_js::ChessboardConfig {
@@ -186,6 +186,8 @@ pub fn js_chess_game() -> Html {
 pub struct GameFormProps {
     pub pgn_game: std::rc::Rc<std::cell::RefCell<rooky_core::RookyGame>>,
     pub on_update: Callback<()>,
+    #[prop_or(Callback::noop())]
+    pub on_close: Callback<()>,
 }
 
 #[function_component(GameForm)]
@@ -193,112 +195,206 @@ pub fn game_form(props: &GameFormProps) -> Html {
     let pgn_game = props.pgn_game.clone();
     let on_update = props.on_update.clone();
 
+    // Local state for form fields
+    let date_value = use_state(|| pgn_game.borrow().date.format("%Y-%m-%d").to_string());
+    let white_value = use_state(|| pgn_game.borrow().white.clone());
+    let black_value = use_state(|| pgn_game.borrow().black.clone());
+
+    // Event details state
+    let event_value = use_state(|| match &pgn_game.borrow().event {
+        rooky_core::pgn_standards::PgnEvent::Named(name) => name.clone(),
+        rooky_core::pgn_standards::PgnEvent::Casual
+        | rooky_core::pgn_standards::PgnEvent::Unknown => String::new(),
+    });
+
+    let site_value = use_state(|| match &pgn_game.borrow().site {
+        rooky_core::pgn_standards::PgnSite::Named(name) => name.clone(),
+        rooky_core::pgn_standards::PgnSite::Unknown => String::new(),
+    });
+
+    let round_value = use_state(|| match &pgn_game.borrow().round {
+        rooky_core::pgn_standards::PgnRound::Named(name) => name.clone(),
+        rooky_core::pgn_standards::PgnRound::Unknown => String::new(),
+    });
+
     let language_ctx = crate::contexts::language::use_language_ctx();
+
+    // Form submission handler
+    let onsubmit_handler = {
+        let pgn_game = pgn_game.clone();
+        let on_update = on_update;
+        let on_close = props.on_close.clone();
+        let date_value = date_value.clone();
+        let white_value = white_value.clone();
+        let black_value = black_value.clone();
+        let event_value = event_value.clone();
+        let site_value = site_value.clone();
+        let round_value = round_value.clone();
+
+        Callback::from(move |_form: web_sys::HtmlFormElement| {
+            // Update game with form values
+            let mut game = pgn_game.borrow_mut();
+
+            // Update basic fields
+            game.date =
+                chrono::NaiveDate::parse_from_str(&date_value, "%Y-%m-%d").unwrap_or_default();
+            game.white.clone_from(&(*white_value));
+            game.black.clone_from(&(*black_value));
+
+            // Update event details if provided
+            let event = (*event_value).clone();
+            if !event.is_empty() {
+                game.event = rooky_core::pgn_standards::PgnEvent::Named(event);
+                game.site = rooky_core::pgn_standards::PgnSite::Named((*site_value).clone());
+                game.round = rooky_core::pgn_standards::PgnRound::Named((*round_value).clone());
+            }
+
+            // Notify parent component of update
+            on_update.emit(());
+
+            // Add success notification
+            nostr_minions::widgets::toastify::ToastifyOptions::new_success("Game details updated")
+                .show();
+
+            // Close modal after brief delay
+            let on_close = on_close.clone();
+            yew::platform::spawn_local(async move {
+                gloo::timers::future::TimeoutFuture::new(1000).await;
+                on_close.emit(());
+            });
+        })
+    };
+
     html! {
         <Card class="size-fit">
-            <CardHeader >
+            <CardHeader>
                 <CardTitle>
                     { language_ctx.t("edit_game_info") }
                 </CardTitle>
             </CardHeader>
             <CardContent class="flex flex-col gap-2">
-                <Input
-                    r#type={shady_minions::ui::InputType::Date}
-                    value={pgn_game.borrow().date.format("%Y-%m-%d").to_string()}
-                    class="w-full"
-                    onchange={{
-                        let pgn_game = pgn_game.clone();
-                        let on_update = on_update.clone();
-                        Callback::from(move |e: String| {
-                            pgn_game.borrow_mut().date = chrono::NaiveDate::parse_from_str(&e, "%Y-%m-%d").unwrap_or_default();
-                            on_update.emit(());
-                        })
-                    }}
-                />
-                <Input
-                    r#type={shady_minions::ui::InputType::Text}
-                    placeholder={ language_ctx.t("common_white") }
-                    class="w-full"
-                    onchange={{
-                        let pgn_game = pgn_game.clone();
-                        let on_update = on_update.clone();
-                        Callback::from(move |e: String| {
-                           pgn_game.borrow_mut().white = e;
-                           on_update.emit(());
-                        })
-                    }}
-                />
-                <Input
-                    r#type={shady_minions::ui::InputType::Text}
-                    placeholder={ language_ctx.t("common_black") }
-                    class="w-full"
-                    onchange={{
-                        let pgn_game = pgn_game.clone();
-                        let on_update = on_update.clone();
-                        Callback::from(move |e: String| {
-                            pgn_game.borrow_mut().black = e;
-                            on_update.emit(());
-                        })
-                    }}
-                />
-                <Popover >
-                <PopoverTrigger>
-                    <Button
-                        class="w-full"
-                        variant={shady_minions::ui::ButtonVariant::Outline}>
-
-                        { language_ctx.t("game_details_event") }
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                        <Form
-                            onsubmit={{
-                                let pgn_game = pgn_game.clone();
-                                let on_update = on_update.clone();
-                                Callback::from(move |e: web_sys::HtmlFormElement| {
-                                    let event_name = e.get_with_name("event_name").and_then(|n| n.dyn_into::<web_sys::HtmlInputElement>().ok()).unwrap();
-                                    let site = e.get_with_name("site").and_then(|n| n.dyn_into::<web_sys::HtmlInputElement>().ok()).unwrap();
-                                    let round = e.get_with_name("round").and_then(|n| n.dyn_into::<web_sys::HtmlInputElement>().ok()).unwrap();
-                                    let event_name = event_name.value();
-                                    let site = site.value();
-                                    let round = round.value();
-                                    pgn_game.borrow_mut().event = rooky_core::pgn_standards::PgnEvent::Named(event_name);
-                                    pgn_game.borrow_mut().site = rooky_core::pgn_standards::PgnSite::Named(site);
-                                    pgn_game.borrow_mut().round = rooky_core::pgn_standards::PgnRound::Named(round);
-                                    on_update.emit(());
+                <Form onsubmit={onsubmit_handler}>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1">{ language_ctx.t("game_details_date") }</label>
+                        <Input
+                            name="date"
+                            r#type={shady_minions::ui::InputType::Date}
+                            value={(*date_value).clone()}
+                            class="w-full"
+                            onchange={{
+                                let date_value = date_value.clone();
+                                Callback::from(move |e: String| {
+                                    date_value.set(e);
                                 })
                             }}
-                        >
-                            <Input
-                                name="event_name"
-                                r#type={shady_minions::ui::InputType::Text}
-                                placeholder={ language_ctx.t("game_details_enter_event_name") }
-                                required={true}
-                                class="w-full"
-                            />
-                            <Input
-                                name="site"
-                                r#type={shady_minions::ui::InputType::Text}
-                                placeholder={ language_ctx.t("game_details_enter_site") }
-                                required={true}
-                                class="w-full"
-                            />
-                            <Input
-                                name="round"
-                                r#type={shady_minions::ui::InputType::Text}
-                                placeholder={ language_ctx.t("game_details_enter_round") }
-                                required={true}
-                                class="w-full"
-                            />
-                            <Button
-                                r#type={shady_minions::ui::ButtonType::Submit}
-                                class="w-full"
-                                variant={shady_minions::ui::ButtonVariant::Outline}>
-                                { language_ctx.t("common_save") }
-                            </Button>
-                        </Form>
-                    </PopoverContent>
-                </Popover>
+                        />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1">{ language_ctx.t("common_white") }</label>
+                        <Input
+                            name="white"
+                            r#type={shady_minions::ui::InputType::Text}
+                            placeholder={ language_ctx.t("common_white") }
+                            value={(*white_value).clone()}
+                            class="w-full"
+                            onchange={{
+                                let white_value = white_value.clone();
+                                Callback::from(move |e: String| {
+                                    white_value.set(e);
+                                })
+                            }}
+                        />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-1">{ language_ctx.t("common_black") }</label>
+                        <Input
+                            name="black"
+                            r#type={shady_minions::ui::InputType::Text}
+                            placeholder={ language_ctx.t("common_black") }
+                            value={(*black_value).clone()}
+                            class="w-full"
+                            onchange={{
+                                let black_value = black_value.clone();
+                                Callback::from(move |e: String| {
+                                    black_value.set(e);
+                                })
+                            }}
+                        />
+                    </div>
+
+                    <div class="mb-6">
+                        <Popover>
+                            <PopoverTrigger>
+                                <Button
+                                    r#type={shady_minions::ui::ButtonType::Button}
+                                    class="w-full"
+                                    variant={shady_minions::ui::ButtonVariant::Outline}>
+                                    { language_ctx.t("game_details_event") }
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">{ language_ctx.t("game_details_event") }</label>
+                                        <Input
+                                            name="event_name"
+                                            r#type={shady_minions::ui::InputType::Text}
+                                            placeholder={ language_ctx.t("game_details_enter_event_name") }
+                                            value={(*event_value).clone()}
+                                            class="w-full"
+                                            onchange={{
+                                                let event_value = event_value.clone();
+                                                Callback::from(move |e: String| {
+                                                    event_value.set(e);
+                                                })
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">{ language_ctx.t("game_details_site") }</label>
+                                        <Input
+                                            name="site"
+                                            r#type={shady_minions::ui::InputType::Text}
+                                            placeholder={ language_ctx.t("game_details_enter_site") }
+                                            value={(*site_value).clone()}
+                                            class="w-full"
+                                            onchange={{
+                                                let site_value = site_value.clone();
+                                                Callback::from(move |e: String| {
+                                                    site_value.set(e);
+                                                })
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">{ language_ctx.t("game_details_round") }</label>
+                                        <Input
+                                            name="round"
+                                            r#type={shady_minions::ui::InputType::Text}
+                                            placeholder={ language_ctx.t("game_details_enter_round") }
+                                            value={(*round_value).clone()}
+                                            class="w-full"
+                                            onchange={{
+                                                let round_value = round_value.clone();
+                                                Callback::from(move |e: String| {
+                                                    round_value.set(e);
+                                                })
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+
+                    <Button
+                        r#type={shady_minions::ui::ButtonType::Submit}
+                        class="w-full">
+                        { language_ctx.t("common_save") }
+                    </Button>
+                </Form>
             </CardContent>
         </Card>
     }
@@ -307,6 +403,13 @@ pub fn game_form(props: &GameFormProps) -> Html {
 #[function_component(GameDetailsModal)]
 pub fn game_details_modal(props: &GameFormProps) -> Html {
     let is_open = use_state(|| false);
+
+    // Creating modal close callback
+    let close_modal = {
+        let is_open = is_open.clone();
+        Callback::from(move |()| is_open.set(false))
+    };
+
     html! {
         <>
             <Button
@@ -320,7 +423,10 @@ pub fn game_details_modal(props: &GameFormProps) -> Html {
                 <lucide_yew::SquarePen class="size-6" />
             </Button>
             <Modal {is_open}>
-                <GameForm ..props.clone() />
+                <GameForm
+                    on_close={close_modal}
+                    ..props.clone()
+                />
             </Modal>
         </>
     }
