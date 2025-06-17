@@ -21,9 +21,7 @@ pub fn js_chess_game() -> Html {
     let pgn_game = use_mut_ref(rooky_core::RookyGame::default);
 
     let force_update = use_state(|| 0);
-    let force_update_cb = {
-        Callback::from(move |()| force_update.set(*force_update + 1))
-    };
+    let force_update_cb = { Callback::from(move |()| force_update.set(*force_update + 1)) };
 
     let position = game_position.clone();
     let on_snap_start = Box::new(
