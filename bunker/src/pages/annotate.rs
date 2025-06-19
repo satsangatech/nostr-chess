@@ -8,6 +8,7 @@ use shakmaty::Position;
 use web_sys::wasm_bindgen::JsCast;
 use yew::prelude::*;
 
+use crate::ResetBoardCard;
 use crate::ShareRookyGameCard;
 
 #[function_component(NewJsChessGame)]
@@ -22,6 +23,21 @@ pub fn js_chess_game() -> Html {
 
     let force_update = use_state(|| 0);
     let force_update_cb = { Callback::from(move |()| force_update.set(*force_update + 1)) };
+
+    let reset_game = {
+        let game_position = game_position.clone();
+        let pgn_game = pgn_game.clone();
+        let game_board = game_board.clone();
+        let force_update_cb = force_update_cb.clone();
+        Callback::from(move |_: ()| {
+            game_position.replace(shakmaty::Chess::new());
+            pgn_game.replace(rooky_core::RookyGame::default());
+            if let Some(board) = game_board.borrow().as_ref() {
+                board.set_position("start");
+            }
+            force_update_cb.emit(());
+        })
+    };
 
     let position = game_position.clone();
     let on_snap_start = Box::new(
@@ -165,12 +181,12 @@ pub fn js_chess_game() -> Html {
                     </CardHeader>
                     <CardContent>
                         <crate::components::GameCard pgn_game={pgn_game.borrow().clone()}  />
-                        <ShareGameModal pgn_game={pgn_game.borrow().clone()} />
+                        <ShareGameModal pgn_game={pgn_game.borrow().clone()} on_finish={reset_game} />
                     </CardContent>
                 </Card>
                 <Card class="h-fit w-fit">
                     <CardHeader>
-                    <div ref={board_ref} id="game" class="h-[66vh] aspect-square" />
+                        <div ref={board_ref} id="game" class="h-[66vh] aspect-square" />
                     </CardHeader>
                     <CardContent></CardContent>
                 </Card>
@@ -432,11 +448,27 @@ pub fn game_details_modal(props: &GameFormProps) -> Html {
     }
 }
 
+#[derive(Properties, PartialEq, Clone)]
+pub struct ShareGameModalProps {
+    pub pgn_game: rooky_core::RookyGame,
+    pub on_finish: Callback<()>,
+}
+
 #[function_component(ShareGameModal)]
-pub fn share_game_modal(props: &crate::components::GameCardProps) -> Html {
+pub fn share_game_modal(props: &ShareGameModalProps) -> Html {
     let is_open = use_state(|| false);
+    let reset_board_modal = use_state(|| false);
     let game = props.pgn_game.clone();
     let language_ctx = crate::contexts::language::use_language_ctx();
+
+    // Define the reset_game callback to call the on_finish prop and close the modal
+    let reset_board_modal_clone = reset_board_modal.clone();
+    let on_finish = props.on_finish.clone();
+    let reset_game = Callback::from(move |_| {
+        on_finish.emit(());
+        reset_board_modal_clone.set(false);
+    });
+
     html! {
         <>
             <Button
@@ -449,8 +481,21 @@ pub fn share_game_modal(props: &crate::components::GameCardProps) -> Html {
                 })}>
                     <span class="text-sm font-bold text-white">{ language_ctx.t("finish_game") }</span>
             </Button>
+            <Button
+                class="w-full mt-5 bg-transparent border-2 border-secondary hover:bg-transparent"
+                r#type={shady_minions::ui::ButtonType::Button}
+                onclick={
+                    let reset_board_modal = reset_board_modal.clone();
+                    Callback::from(move |_| {
+                    reset_board_modal.set(!&*reset_board_modal);
+                })}>
+                    <span class="text-sm font-bold text-white">{ language_ctx.t("game_reset_board") }</span>
+            </Button>
             <Modal {is_open}>
                 <ShareRookyGameCard  {game} />
+            </Modal>
+            <Modal is_open={reset_board_modal}>
+                <ResetBoardCard on_finish={reset_game}/>
             </Modal>
         </>
     }
