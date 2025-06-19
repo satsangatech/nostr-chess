@@ -224,9 +224,7 @@ pub fn pwa_install() -> Html {
         let promise = install_event.prompt();
         let handle = wasm_bindgen_futures::JsFuture::from(promise);
         yew::platform::spawn_local(async move {
-            web_sys::console::log_1(&"Prompting install...".into());
             let result = handle.await;
-            web_sys::console::log_1(&format!("Install result: {:?}", result).into());
         });
     });
 
