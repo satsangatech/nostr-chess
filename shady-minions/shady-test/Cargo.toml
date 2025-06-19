@@ -1,9 +1,0 @@
-[package]
-name = "shady-test"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-yew = { version = "0.21.0", features = ["csr"] }
-shady-minions = { path = "../" }
-web-sys = "0.3.77"
