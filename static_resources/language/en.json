@@ -66,6 +66,9 @@
     "edit_game_info": "Edit Game Info",
     "game_prev_move": "Previous Move",
     "game_next_move": "Next Move",
+    "game_reset_board": "Reset Board",
+    "game_reset_board_confirm": "Are you sure you want to reset the board?",
+    "game_reset_board_description": "This will clear all moves and annotations.",
 
     "key_recovery_title": "Key Recovery",
     "key_recovery_back": "Back to Home",

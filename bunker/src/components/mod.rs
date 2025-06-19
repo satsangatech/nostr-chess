@@ -200,6 +200,38 @@ pub fn share_rooky_game_card(props: &JsChessGameProps) -> Html {
     }
 }
 
+#[derive(Properties, PartialEq, Clone)]
+pub struct ShareGameModalProps {
+    pub on_finish: Callback<()>,
+}
+
+#[function_component(ResetBoardCard)]
+pub fn reset_board_card(props: &ShareGameModalProps) -> Html {
+    let language_ctx = crate::contexts::language::use_language_ctx();
+    html! {
+        <Card class="size-fit">
+            <CardHeader>
+                <CardTitle>{language_ctx.t("game_reset_board_confirm")}</CardTitle>
+                <CardDescription class="max-w-64 text-primary-foreground">
+                    {language_ctx.t("game_reset_board_description")}
+                </CardDescription>
+            </CardHeader>
+            <CardContent class="flex flex-col gap-2">
+                <Button
+                class="w-full mt-5 bg-transparent border-2 border-secondary hover:bg-transparent"
+                r#type={shady_minions::ui::ButtonType::Button}
+                onclick={
+                    let on_finish = props.on_finish.clone();
+                    Callback::from(move |_| {
+                    on_finish.emit(());
+                })}>
+                    <span class="text-sm font-bold text-white">{ language_ctx.t("game_reset_board") }</span>
+            </Button>
+            </CardContent>
+        </Card>
+    }
+}
+
 #[function_component(ShareRookyGame)]
 pub fn share_rooky_game(props: &JsChessGameProps) -> Html {
     let language_ctx = crate::contexts::language::use_language_ctx();
