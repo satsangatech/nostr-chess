@@ -2,6 +2,11 @@
 name = "rooky-core"
 version = "0.1.0"
 edition = "2021"
+categories = ["authentication", "cryptography", "web-programming"]
+license = "MIT"
+description = "Nostr based protocol for sharing chess data."
+repository = "https://github.com/satsangatech/rooky-chess-protocol"
+readme = "../README.md"
 
 [dependencies]
 chrono.workspace = true
