@@ -1,7 +1,6 @@
 [workspace]
 resolver="2"
-members = [ "annotator", "bunker", "rooky-core", "chessboard-js", "external"]
-exclude = ["shady-minions"]
+members = ["rooky-core", "chessboard-js", "external"]
 
 [workspace.dependencies]
 pgn-reader = "0.26.0"
